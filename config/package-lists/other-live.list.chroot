@@ -1,0 +1,14 @@
+## Important packages not installed by 'debootstrap --variant=minbase'
+# please keep list sorted alphabetically for maintainability
+
+cdebootstrap
+curl
+ifupdown
+isc-dhcp-client
+less
+lsof
+nano
+net-tools
+parted
+sudo
+user-setup

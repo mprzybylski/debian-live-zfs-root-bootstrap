@@ -1,2 +1,5 @@
 lsb-release
+build-essential
 debian-zfs
+gdisk
+

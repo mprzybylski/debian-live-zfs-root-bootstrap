@@ -12,4 +12,6 @@ rsync -Pavp\
     --exclude .git\
     --exclude .idea\
     --exclude *.iml\
+    --exclude *.iso\
+    --exclude *.zsync\
     ${PROJECT_PATH}/ root@debbie-does-linus:$(basename $PROJECT_PATH)/

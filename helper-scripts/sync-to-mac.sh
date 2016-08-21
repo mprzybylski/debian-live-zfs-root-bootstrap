@@ -14,4 +14,4 @@ rsync -Pavp \
     --exclude binary\
     --exclude cache\
     --exclude chroot*\
-    ${PROJECT_PATH}/ mikep@mac:~/src/$(basename $PROJECT_PATH)/
+    ${PROJECT_PATH}/ mikep@mac:~/src/debian-live-zfs-root-bootstrap/
