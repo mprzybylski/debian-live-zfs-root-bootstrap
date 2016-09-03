@@ -10,7 +10,7 @@ LB_APT_FTP_PROXY=""
 
 # $LB_APT_HTTP_PROXY: set apt/aptitude http proxy
 # (Default: autodetected or empty)
-LB_APT_HTTP_PROXY="http://127.0.0.1:3142"
+LB_APT_HTTP_PROXY=""
 
 # $LB_APT_PIPELINE: set apt/aptitude pipeline depth
 # (Default: )
@@ -123,5 +123,5 @@ APT_OPTIONS="--yes"
 APTITUDE_OPTIONS="--assume-yes"
 DEBOOTSTRAP_OPTIONS="--variant=minbase"
 CDEBOOTSTRAP_OPTIONS=""
-GZIP_OPTIONS="-6  --rsyncable"
+GZIP_OPTIONS="-6 --rsyncable"
 ISOHYBRID_OPTIONS=""
