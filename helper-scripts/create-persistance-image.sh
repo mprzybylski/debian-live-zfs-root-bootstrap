@@ -1,12 +1,6 @@
 #!/bin/bash
 
 PROGNAME=$(basename $0)
-if [[ $0 =~ ^/ ]]; then
-    PROJECT_DIR="$(dirname \"$(dirname \"$0\")\")"
-else
-# an extra dirname should strip the dot that ends up in $(pwd)/$0
-PROJECT_DIR="$(dirname \"$(dirname \"$(dirname \"$(pwd)/$0\")\")\")"
-fi
 USAGE="\
 $PROGNAME:
 Creates a disk image with a FAT32 debian live persistance filesystem in the
@@ -23,7 +17,7 @@ Options:
         -h  Print this help message and exit
         -f  Overwrite /path/to/persistence/image, if it already exists."
 
-OVERWRITE=""
+OVERWRITE=false
 BADOPTS=false
 
 while getopts :fh opt; do
@@ -32,8 +26,7 @@ while getopts :fh opt; do
             exit
             ;;
         f)
-            # FIXME: need to fix the force / overwrite logic
-            OVERWRITE="-ov"
+            OVERWRITE=true
             ;;
         *)
             >&2 echo "Unrecognized option: $OPTARG"
@@ -76,7 +69,20 @@ is not a directory"
 fi
 
 if [ -w "$(dirname "$2")" ]; then
-    IMAGE_PATH="$2"
+    if [ -f "$2" ]; then
+        if $OVERWRITE; then
+            if ! rm "$2"; then
+                >&2 echo "Failed to delete $2.  Exiting."
+            fi
+            IMAGE_PATH="$2"
+        else
+            >&2 echo "$2 already exists.  Use -f to overwrite
+"
+            INPUT_ERRORS=true
+        fi
+    else
+        IMAGE_PATH="$2"
+    fi
 else
     >&2 echo "Directory '$2' is not writable.
 "
@@ -85,7 +91,8 @@ fi
 
 if [ -n "$3" ]; then
     if ! [[ $2 =~ ^[0-9]+[kmg]$ ]]; then
-        >&2 echo "Persistence image size incorrectly specified."
+        >&2 echo "Persistence image size incorrectly specified.
+"
         INPUT_ERRORS=true
     else
         IMAGE_SIZE=$3
@@ -101,36 +108,59 @@ Exiting."
     exit 1
 fi
 
+#Temporary mount point for disk image
+TMPMNT=
+#Node in /dev where image is attached
+DEV_NODE=
+
 platform=`uname -s`
 
 # TODO: add support for Linux... eventually.
 case $platform in
     "Darwin")
+        darwin_cleanup(){
+            if [ -n "DEV_NODE" ] && [ -f $DEV_NODE ]; then
+                # unmount
+                diskutil umount ${DEV_NODE}s1
+                # detach
+                hdiutil detach $DEV_NODE
+            fi
+            # delete intermediate disk image, if it still exists.
+            rm -f "$IMAGE_PATH.dmg"
+            [ -n "$TMPMNT" ] && rm -rf $TMPMNT
+        }
         # create and attach platform native disk image (hdiutil)
-        hdiutil create -size $IMAGE_SIZE "$IMAGE_PATH".dmg || exit 1
+
+        if ! HDIUTIL_ERR=`hdiutil create -size $IMAGE_SIZE -layout GPTSPUD -fs "MS-DOS FAT16" -volname persistence\
+            "$IMAGE_PATH".dmg 2>&1`; then
+            >&2 echo "Failed to create intermediate, native image $IMAGE_PATH.dmg"
+            >&2 echo "$HDIUTIL_ERR"
+            exit 1
+        fi
+
+        trap darwin_cleanup EXIT
+
         DEV_NODE=`hdiutil attach -nomount "$IMAGE_PATH.dmg" | awk '{print $1; exit;}'`
-        diskutil partitionDisk $DEV_NODE 1 'MS-DOS FAT32' PERSISTENCE 31M
+        diskutil rename ${DEV_NODE}s1 persistence
 
         # mount and copy persistence_tree into it
         TMPMNT=`mktemp -d`
         diskutil mount -mountPoint $TMPMNT ${DEV_NODE}s1
-        mount
-        hdiutil detach $DEV_NODE
-        rm -f "$IMAGE_PATH.dmg"
-        exit
         # assumes permissions are already correct in $PERSISTENCE_ROOT
-        sudo cp -a "$PERSISTENCE_ROOT/" $TMPMNT
+        COPYCMD="sudo cp -a $PERSISTENCE_ROOT/ $TMPMNT"
+        echo "About to execute..."
+        echo "$COPYCMD"
+        echo "...sudo password may be required."
+        $COPYCMD
+        ls -l $TMPMNT
 
         # unmount
-        diskutil umount $DEV_NODE
-
+        diskutil umount ${DEV_NODE}s1
         # detach
         hdiutil detach $DEV_NODE
 
         # use virtualbox utility to convert native disk image into VirtualBox disk image.
         VBoxManage convertfromraw "$IMAGE_PATH.dmg" "$IMAGE_PATH" --format VDI
-        # delete intermediate disk image, if it still exists.
-        rm -f "$IMAGE_PATH.dmg"
     ;;
     *)
         >&2 echo "Only the following platforms are currently supported: MacOS X."

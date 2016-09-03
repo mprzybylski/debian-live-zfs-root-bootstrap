@@ -9,6 +9,7 @@ less
 lsof
 nano
 net-tools
+openssh-client
 parted
 sudo
 user-setup

@@ -1,7 +1,0 @@
-# The loopback network interface
-auto lo
-iface lo inet loopback
-
-# Set up interfaces manually, avoiding conflicts with, e.g., network manager
-auto eth0
-iface eth0 inet dhcp
