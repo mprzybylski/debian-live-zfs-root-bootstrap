@@ -1,6 +1,7 @@
 #!/bin/sh
 
 INCLUDED_SBIN_SCRIPTS="bootstrap-zfs-debian-root.sh
+    configure-root-pool.sh
     create-bios-boot-partition.sh
     create-zfs-data-partition.sh
     create-zfs-efi-partition.sh"

@@ -3,11 +3,9 @@
 #FIXME add a -h option.
 
 USAGE="\
-Usage: bootstrap-zfs-debian-root.sh [zfs_pool_name]
+Usage: bootstrap-zfs-debian-root.sh
 
-Creates a root filesystem in the specified ZFS pool mounts it at /mnt and
-installs a base debian system on it.  If no pool is specified, the first pool
-in the output of 'zpool list' will be used.
+Installs bootable Debian root filesystem to /mnt.
 "
 
 STAGE2_BOOTSTRAP=stage-2-bootstrap.sh
@@ -25,6 +23,7 @@ cleanup(){
     umount /mnt/dev/pts
     umount /mnt/dev
     umount /mnt/proc
+    umount /mnt/sys/fs/fuse/connections
     umount /mnt/sys
 
     zpool export -a
@@ -39,52 +38,9 @@ Check your network and firewall configurations."
 exit 1
 fi
 
-if [ -n "$1" ]; then
-    if ! zpool list "$1"; then
-        >&2 echo "ZFS pool $1 does not exist, or is not imported"
-        exit 2
-    fi
-    POOL=$1
-else
-    POOL=`zpool list -H | awk '{print $1; exit}'`
-    if [ -z "$POOL" ]; then
-        >&2 echo "No ZFS pools available."
-        exit 2
-    fi
-fi
-
-trap cleanup EXIT
-trap sigint_handler INT
-
-#  * Create filesystems and set properties
-ROOTFS_PARENT=$POOL/ROOT
-ROOTFS=$ROOTFS_PARENT/debian-1
-if ! zfs list $ROOTFS_PARENT >/dev/null 2>&1; then
-    if ! zfs create -o mountpoint=none $ROOTFS_PARENT; then
-        >&2 echo "Failed to create ZFS filesystem $ROOTFS_PARENT"
-        exit 3
-    fi
-fi
-
-# just in case filesystem was previously created manually without this property set
-zfs set mountpoint=none $ROOTFS_PARENT
-
-if ! zfs list $ROOTFS >/dev/null 2>&1; then
-    if ! zfs create $ROOTFS; then
-        >&2 echo "Failed to create ZFS filesystem $ROOTFS"
-        exit 4
-    fi
-fi
-
-# just in case pool or filesystem were previously created manually without these properties set
-zfs set mountpoint=/ $ROOTFS
-zpool set bootfs=$ROOTFS $POOL
-
-# TODO: add code and/or switches for additional filesystem creation before bootstrapping?
-
-zpool export $POOL
-if ! zpool import -o altroot=/mnt $POOL; then
-    >&2 echo "Failed to export and reimport $POOL at /mnt"
+zpool export -a
+if ! zpool import -a altroot=/mnt; then
+    >&2 echo "Failed to export and reimport ZFS pools at /mnt"
     exit 5
 fi
 
@@ -96,6 +52,9 @@ mkdir /mnt/proc
 
 mkdir /mnt/sys
 mount -o bind /sys /mnt/sys
+
+trap cleanup EXIT
+trap sigint_handler INT
 
 if ! apt-get update || ! cdebootstrap jessie /mnt; then
     >&2 echo "Failed to setup root filesystem in $ROOTFS"
@@ -109,4 +68,4 @@ cp /packages/$ZFS_TRUST_PACKAGE /mnt/tmp
 cp /scripts/$STAGE2_BOOTSTRAP /mnt/root/$STAGE2_BOOTSTRAP
 chroot /mnt /root/$STAGE2_BOOTSTRAP
 
-# cleanup called implicitly by exit
+# cleanup() called implicitly by exit

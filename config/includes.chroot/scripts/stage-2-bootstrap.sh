@@ -5,7 +5,7 @@ apt-get update
 apt-get --assume-yes install linux-image-amd64 linux-headers-amd64 lsb-release build-essential gdisk
 dpkg -i /tmp/zfsonlinux_8_all.deb
 apt-get update
-# FIXME: pre-seed grub2 package configuration somehow
+# TODO: pre-seed grub2 package configuration somehow?
 apt-get --assume-yes install debian-zfs zfs-initramfs grub-pc
 
 echo "Set the root password for your newly-installed system."
@@ -15,3 +15,7 @@ while ! $ROOT_PASSWD_SET; do
         ROOT_PASSWD_SET=true
     fi
 done
+
+# irqbalance gets automatically started by kernel installation and hangs onto file handles in /dev/  Stop it before
+# leaving chroot
+service irqbalance stop
