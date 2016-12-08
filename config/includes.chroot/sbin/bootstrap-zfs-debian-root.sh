@@ -3,46 +3,53 @@
 #FIXME add a -h option.
 
 USAGE="\
-Usage: bootstrap-zfs-debian-root.sh
+Usage: bootstrap-zfs-debian-root.sh <rootpool> [pooltwo]...
 
 Installs bootable Debian root filesystem to /mnt.
 "
 
+DISTRO_NAME=jessie
 STAGE2_BOOTSTRAP=stage-2-bootstrap.sh
-ZFS_TRUST_PACKAGE=zfsonlinux_8_all.deb
 
 sigint_handler(){
     >&2 echo "Caught SIGINT.  Exiting."
     exit
 }
 
-cleanup(){
-    rm -f /mnt/root/$STAGE2_BOOTSTRAP
-    rm -f /mnt/tmp/$ZFS_TRUST_PACKAGE
-
-    umount /mnt/dev/pts
-    umount /mnt/dev
-    umount /mnt/proc
-    umount /mnt/sys/fs/fuse/connections
-    umount /mnt/sys
-
-    zpool export -a
-
-    echo "All ZFS pools exported.  Ready for reboot"
+reverse(){
+    i=${#@}
+        while [ $i -gt 0 ]; do
+        echo ${!i}
+        ((i--))
+    done
 }
+
+if [ -z "$1" ]; then
+    >&2 echo "Root pool argument required.  Unable to proceed.  Exiting"
+    exit 1
+fi
 
 # if we aren't using a deb-caching proxy, check connectivity to debian's HTTP redirector
 if [ -z "$http_proxy" ] && ! curl -IL http://httpredir.debian.org/ >/dev/null 2>&1; then
     >&2 echo "Failed to conect to http://httpredir.debian.org/
 Check your network and firewall configurations."
-exit 1
+exit 2
 fi
 
 zpool export -a
-if ! zpool import -a altroot=/mnt; then
-    >&2 echo "Failed to export and reimport ZFS pools at /mnt"
-    exit 5
-fi
+for pool in $@; do
+    if ! zpool import -o altroot=/mnt $pool; then
+        >&2 echo "Failed to export and reimport ZFS pools at /mnt"
+        exit 3
+    fi
+done
+
+# TODO: identify the root pool and add a bios boot partition to each non-cache, non-log leaf vdev
+
+mkdir -p /mnt/etc/zfs
+for pool in `zpool list -H | awk '{print $1}'`; do
+    zpool set cachefile=/mnt/etc/zfs/zpool.cache $pool
+done
 
 mkdir /mnt/dev
 mount -o bind /dev/ /mnt/dev
@@ -53,19 +60,24 @@ mkdir /mnt/proc
 mkdir /mnt/sys
 mount -o bind /sys /mnt/sys
 
-trap cleanup EXIT
 trap sigint_handler INT
 
-if ! apt-get update || ! cdebootstrap jessie /mnt; then
+if ! apt-get update || ! cdebootstrap $DISTRO_NAME /mnt; then
     >&2 echo "Failed to setup root filesystem in $ROOTFS"
-    exit 6
+    exit 4
 fi
+
+# copy custom apt and other config files into new root
+cp -a /target_config/* /mnt/
 
 mount -o bind /proc /mnt/proc
 
-cp /packages/$ZFS_TRUST_PACKAGE /mnt/tmp
-
 cp /scripts/$STAGE2_BOOTSTRAP /mnt/root/$STAGE2_BOOTSTRAP
-chroot /mnt /root/$STAGE2_BOOTSTRAP
+# $http_proxy is an environment variable that (c)debootstrap honors for downloading packages
+# if it happens to point to caching proxy like apt-cacher-ng, it can greatly accelerate installs
+if ! chroot /mnt /root/$STAGE2_BOOTSTRAP $http_proxy; then
+    >&2 echo "Stage 2 bootstrap failed. Exiting"
+    exit 5
+fi
 
-# cleanup() called implicitly by exit
+cleanup.sh $(reverse $@)

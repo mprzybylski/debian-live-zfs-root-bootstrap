@@ -1,5 +1,6 @@
 lsb-release
+linux-headers-amd64
 build-essential
-debian-zfs
+zfsutils-linux
+zfs-dkms
 gdisk
-

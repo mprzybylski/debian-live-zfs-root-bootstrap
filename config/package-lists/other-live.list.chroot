@@ -13,3 +13,4 @@ openssh-client
 parted
 sudo
 user-setup
+vim-tiny

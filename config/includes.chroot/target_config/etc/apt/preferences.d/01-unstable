@@ -1,0 +1,4 @@
+Explanation: Prevents most unstable packages from being installed.
+Package: *
+Pin: release a=unstable
+Pin-priority: -1

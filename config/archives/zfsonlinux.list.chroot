@@ -1,8 +1,0 @@
-## Copied from the ZFSonLinux package.
-
-deb [arch=amd64] http://archive.zfsonlinux.org/debian jessie main
-#deb-src http://archive.zfsonlinux.org/debian jessie main
-
-# !! Enable these ONLY if you want/need the dailies - latest ZoL code !!
-#deb [arch=amd64] http://archive.zfsonlinux.org/debian jessie-daily main
-#deb-src http://archive.zfsonlinux.org/debian jessie-daily main
