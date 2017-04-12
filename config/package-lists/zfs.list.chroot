@@ -2,5 +2,6 @@ lsb-release
 linux-headers-amd64
 build-essential
 zfsutils-linux
+spl-dkms
 zfs-dkms
 gdisk

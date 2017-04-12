@@ -41,8 +41,8 @@ LB_PARENT_MIRROR_DEBIAN_INSTALLER="http://ftp.debian.org/debian/"
 LB_MIRROR_BOOTSTRAP="http://ftp.debian.org/debian/"
 
 # $LB_MIRROR_CHROOT: set mirror to fetch packages from
-# (Default: http://ftp.debian.org/debian/)
-LB_MIRROR_CHROOT="http://ftp.debian.org/debian/"
+# (Default: deb)
+LB_MIRROR_CHROOT="deb"
 
 # $LB_MIRROR_CHROOT_SECURITY: set security mirror to fetch packages from
 # (Default: http://security.debian.org/)
