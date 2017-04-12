@@ -11,4 +11,4 @@ Also need to install `linux-image-amd64` and `linux-headers-amd64`
 `http_proxy=http://proxyhost:proxyport` tells debootstrap to download via a caching proxy
 lb bootstrap with `http_proxy`
 
-`lb clean && lb build` with `http_proxy` set
+`lb clean --purge && lb build` with `http_proxy` set
