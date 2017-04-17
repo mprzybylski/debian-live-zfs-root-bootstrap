@@ -9,6 +9,8 @@ Installs bootable Debian root filesystem to /mnt.
 "
 
 DISTRO_NAME=jessie
+ROOT_CONTAINER_FS="${1}/ROOT"
+ROOTFS="${ROOT_CONTAINER_FS}/debian"
 STAGE2_BOOTSTRAP=stage-2-bootstrap.sh
 
 sigint_handler(){
@@ -36,11 +38,31 @@ Check your network and firewall configurations."
 exit 2
 fi
 
+if ! zfs list $ROOT_CONTAINER_FS >/dev/null 2>&1
+then
+    if ! zfs create -o canmount=off -o mountpoint=none $ROOT_CONTAINER_FS
+    then
+        >&2 echo "Failed to create $ROOT_CONTAINER_FS. Exiting."
+        exit 3
+    fi
+fi
+
+if ! zfs list $ROOTFS >/dev/null 2>&1
+then
+    if ! zfs create -o canmount=noauto -o mountpoint=/ $ROOTFS
+    then
+        >&2 echo "Failed to create $ROOTFS. Exiting."
+        exit 4
+    fi
+fi
+
+zpool set bootfs=$ROOTFS $1
+
 zpool export -a
 for pool in $@; do
     if ! zpool import -o altroot=/mnt $pool; then
         >&2 echo "Failed to export and reimport ZFS pools at /mnt"
-        exit 3
+        exit 6
     fi
 done
 
