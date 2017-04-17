@@ -1,5 +1,6 @@
 # Building
 * Clone this project to a debian box
+* ***Become root** (this is a gross but unavoidable artifact of Debian's live-build architecture)* 
 * Change directories into the project root
 * `lb clean --purge && lb build`
 
