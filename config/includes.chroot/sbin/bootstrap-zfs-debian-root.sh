@@ -59,12 +59,14 @@ fi
 zpool set bootfs=$ROOTFS $1
 
 zpool export -a
+set -x
 for pool in $@; do
     if ! zpool import -o altroot=/mnt $pool; then
         >&2 echo "Failed to export and reimport ZFS pools at /mnt"
         exit 6
     fi
 done
+set +x
 
 # TODO: identify the root pool and add a bios boot partition to each non-cache, non-log leaf vdev
 
