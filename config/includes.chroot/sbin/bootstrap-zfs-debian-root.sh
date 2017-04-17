@@ -49,6 +49,8 @@ fi
 
 if ! zfs list $ROOTFS >/dev/null 2>&1
 then
+    # create rootfs and keep it from complaining that it can't mount to / with
+    #   canmount=noauto
     if ! zfs create -o canmount=noauto -o mountpoint=/ $ROOTFS
     then
         >&2 echo "Failed to create $ROOTFS. Exiting."
@@ -59,14 +61,17 @@ fi
 zpool set bootfs=$ROOTFS $1
 
 zpool export -a
-set -x
+
+# make sure $ROOTFS mounts at / when we import its pool
+zfs set canmount=on $ROOTFS
+
 for pool in $@; do
     if ! zpool import -o altroot=/mnt $pool; then
         >&2 echo "Failed to export and reimport ZFS pools at /mnt"
         exit 6
     fi
 done
-set +x
+
 
 # TODO: identify the root pool and add a bios boot partition to each non-cache, non-log leaf vdev
 
