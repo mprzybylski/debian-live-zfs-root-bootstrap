@@ -1,7 +1,7 @@
 # lb build artifacts
 
 .build
-binary
+/binary
 cache
 chroot
 *.files
