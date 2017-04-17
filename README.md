@@ -1,3 +1,6 @@
+# Background
+* FIXME: talk about live-manual-pdf
+
 # Building
 * Clone this project to a debian box
 * ***Become root** (this is a gross but unavoidable artifact of Debian's live-build architecture)* 
