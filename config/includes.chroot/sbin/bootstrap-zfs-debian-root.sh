@@ -60,10 +60,10 @@ fi
 
 zpool set bootfs=$ROOTFS $1
 
-zpool export -a
-
 # make sure $ROOTFS mounts at / when we import its pool
 zfs set canmount=on $ROOTFS
+
+zpool export -a
 
 for pool in $@; do
     if ! zpool import -o altroot=/mnt $pool; then
