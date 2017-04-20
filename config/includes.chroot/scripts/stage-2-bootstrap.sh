@@ -14,8 +14,8 @@ apt_get_errors=0
 
 
 apt-get update
-apt-get --assume-yes install linux-image-amd64 linux-headers-amd64 lsb-release build-essential gdisk vim-tiny\
-    || ((apt_get_errors++))
+apt-get --assume-yes install linux-image-amd64 linux-headers-amd64 \
+    lsb-release build-essential gdisk vim-tiny dkms || ((apt_get_errors++))
 apt-get --assume-yes install spl-dkms || ((apt_get_errors++))
 apt-get --assume-yes install zfs-dkms zfs-initramfs || ((apt_get_errors++))
 apt-get --assume-yes install grub-pc

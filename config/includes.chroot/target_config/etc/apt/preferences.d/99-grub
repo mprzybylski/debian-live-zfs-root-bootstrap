@@ -1,5 +1,5 @@
-Explanation: Prefer all packages from version 2.02~beta3-3 of the grub2 source package, (from sid)
+Explanation: Prefer all packages from stretch
 Explanation: or later versions coming from the target distro.
 Package: grub-common grub-coreboot grub-coreboot-bin grub-coreboot-dbg grub-efi grub-efi-amd64 grub-efi-amd64-bin grub-efi-amd64-dbg grub-emu grub-emu-dbg grub-firmware-qemu grub-ieee1275 grub-ieee1275-bin grub-ieee1275-dbg grub-linuxbios grub-mount-udeb grub-pc grub-pc-bin grub-pc-dbg grub-rescue-pc grub-theme-starfield grub-xen grub-xen-bin grub-xen-dbg grub-xen-host grub2 grub2-common
-Pin: version 2.02~beta3-3
+Pin: release n=stretch
 Pin-Priority: 989
