@@ -20,6 +20,7 @@ source /sbin/partition_functions.sh
 if [ -n "$1" ] && is_block_device "$1" && ! is_partition "$1"; then
     PARTNUM=`get_first_available_partition_number "$1"`
     sgdisk -a 1 --new=$PARTNUM:48:2047 --typecode=$PARTNUM:EF02 --change-name=$PARTNUM:"BIOS boot partition" "$1"
+    partprobe $1
 else
     >&2 echo "Error: Argument must be a block device and not a partition."
     exit 1

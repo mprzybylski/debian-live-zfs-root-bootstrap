@@ -47,6 +47,7 @@ if [ -n "$1" ] && is_block_device "$1" && ! is_partition "$1"; then
         PARTNUM=`get_first_available_partition_number "$1"`
     fi
     sgdisk --new=$PARTNUM:0:+$SIZE --typecode=$PARTNUM:BF01 --change-name=$PARTNUM:"ZFS data partition" "$1"
+    partprobe $1
 else
     >&2 echo "Error: First argument must be a block device and not a partition."
     >&2 echo "$USAGE"

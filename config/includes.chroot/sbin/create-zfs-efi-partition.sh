@@ -20,6 +20,7 @@ PARTNUM=9
 
 if [ -n "$1" ] && is_block_device "$1" && ! is_partition "$1"; then
     sgdisk --new=$PARTNUM:-8M:+8M --typecode=$PARTNUM:BF07 --change-name=$PARTNUM:"ZFS EFI partition" "$1"
+    partprobe $1
 else
     >&2 echo "Error: Argument must be a block device and not a partition."
     >&2 echo "$USAGE"
