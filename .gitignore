@@ -10,6 +10,7 @@ chroot
 *.contents
 *.zsync
 *.packages
+*.iso
 
 # Created by .ignore support plugin (hsz.mobi)
 ### JetBrains template
