@@ -1,8 +1,8 @@
 # config/bootstrap - options for live-build(7), bootstrap stage
 
 # $LB_DISTRIBUTION: select distribution to use
-# (Default: jessie)
-LB_DISTRIBUTION="jessie"
+# (Default: stretch)
+LB_DISTRIBUTION="stretch"
 
 # $LB_PARENT_DISTRIBUTION: select parent distribution to use
 # (Default: jessie)
