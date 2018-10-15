@@ -17,8 +17,8 @@ LB_APT_HTTP_PROXY=""
 LB_APT_PIPELINE=""
 
 # $LB_APT_RECOMMENDS: set apt/aptitude recommends
-# (Default: false)
-LB_APT_RECOMMENDS="false"
+# (Default: true)
+LB_APT_RECOMMENDS="true"
 
 # $LB_APT_SECURE: set apt/aptitude security
 # (Default: true)
@@ -61,8 +61,8 @@ LB_INITRAMFS="live-boot"
 LB_INITRAMFS_COMPRESSION="gzip"
 
 # $LB_INITSYSTEM: set init system
-# (Default: sysvinit)
-LB_INITSYSTEM="sysvinit"
+# (Default: systemd)
+LB_INITSYSTEM="systemd"
 
 # $LB_FDISK: set fdisk program
 # (Default: autodetected)
@@ -113,7 +113,7 @@ _QUIET="false"
 # Internal stuff (FIXME)
 APT_OPTIONS="--yes"
 APTITUDE_OPTIONS="--assume-yes"
-DEBOOTSTRAP_OPTIONS="--variant=minbase"
+DEBOOTSTRAP_OPTIONS=""
 DEBOOTSTRAP_SCRIPT=""
-GZIP_OPTIONS="-6  --rsyncable"
+GZIP_OPTIONS="-6 --rsyncable"
 ISOHYBRID_OPTIONS=""

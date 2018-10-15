@@ -1,3 +1,0 @@
-Package: dkms
-Pin: release n=jessie-backports
-Pin-Priority: 990
