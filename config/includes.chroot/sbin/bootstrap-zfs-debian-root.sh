@@ -8,7 +8,7 @@ Usage: bootstrap-zfs-debian-root.sh <rootpool> [pooltwo]...
 Installs bootable Debian root filesystem to /mnt.
 "
 
-DISTRO_NAME=jessie
+DISTRO_NAME=stretch
 ROOT_CONTAINER_FS="${1}/ROOT"
 ROOTFS="${ROOT_CONTAINER_FS}/debian"
 STAGE2_BOOTSTRAP=stage-2-bootstrap.sh
