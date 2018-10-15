@@ -47,7 +47,7 @@ LB_DEBIAN_INSTALLER="false"
 
 # $LB_DEBIAN_INSTALLER_DISTRIBUTION: set debian-installer suite
 # (Default: empty)
-LB_DEBIAN_INSTALLER_DISTRIBUTION="jessie"
+LB_DEBIAN_INSTALLER_DISTRIBUTION="stretch"
 
 # $LB_DEBIAN_INSTALLER_PRESEEDFILE: set debian-installer preseed filename/url
 # (Default: )
@@ -86,8 +86,8 @@ LB_ISO_PREPARER="live-build 1:20170213; http://live-systems.org/devel/live-build
 LB_ISO_PUBLISHER="Live Systems project; http://live-systems.org/; debian-live@lists.debian.org"
 
 # $LB_ISO_VOLUME: set iso volume (max 32 chars)
-# (Default: Debian jessie 20181011-23:17)
-LB_ISO_VOLUME="Debian jessie 20181011-23:17"
+# (Default: Debian stretch 20181015-12:39)
+LB_ISO_VOLUME="Debian stretch 20181015-12:39"
 
 # $LB_JFFS2_ERASEBLOCK: set jffs2 eraseblock size
 # (Default: unset)
