@@ -54,8 +54,8 @@ LB_DEBIAN_INSTALLER_DISTRIBUTION="stretch"
 LB_DEBIAN_INSTALLER_PRESEEDFILE=""
 
 # $LB_DEBIAN_INSTALLER_GUI: toggle use of GUI debian-installer
-# (Default: true)
-LB_DEBIAN_INSTALLER_GUI="true"
+# (Default: false)
+LB_DEBIAN_INSTALLER_GUI="false"
 
 # $LB_GRUB_SPLASH: set custom grub splash
 # (Default: empty)
