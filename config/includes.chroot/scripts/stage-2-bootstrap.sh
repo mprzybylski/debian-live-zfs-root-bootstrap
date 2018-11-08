@@ -1,17 +1,25 @@
 #!/bin/bash --login
 
-#FIXME: should take an optional http_proxy argument and poke it into apt.conf.d
+LOOPBACK_IF_NAME=lo
+
+cat > /etc/network/interfaces/lo <<LOOPBACK_CONFIG
+auto $LOOPBACK_IF_NAME
+iface $LOOPBACK_IF_NAME inet loopback
+LOOPBACK_CONFIG
+
+# Get all non-loopback interface names
+NETWORK_INTERFACES=( `ip -o -a link | awk '$2 !~ /^lo:/{print substr($2, 1, length($2)-1)}'` )
+
+for interface in ${NETWORK_INTERFACES[@]}; do
+cat > /etc/network/interfaces.d/$interface <<DHCP_NETWORK_CONFIG
+auto $interface
+iface $interface inet dhcp
+DHCP_NETWORK_CONFIG
+done
 
 ln -s /proc/mounts /etc/mtab
 
-if [ -n "$1" ]; then
-    cat >> /etc/apt/apt.conf.d/99caching-proxy <<CACHING_PROXY_CONFIG
-Acquire::http { Proxy "$1"; };
-CACHING_PROXY_CONFIG
-fi
-
 apt_get_errors=0
-
 
 apt-get update
 apt-get --assume-yes install linux-image-amd64 linux-headers-amd64 \

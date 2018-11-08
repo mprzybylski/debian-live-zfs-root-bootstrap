@@ -5,13 +5,37 @@
 USAGE="\
 Usage: bootstrap-zfs-debian-root.sh <rootpool> [pooltwo]...
 
-Installs bootable Debian root filesystem to /mnt.
+Installs bootable Debian root filesystem to the specified ZFS pool(s).
 "
 
+ROOT_POOL=$1
 DISTRO_NAME=stretch
-ROOT_CONTAINER_FS="${1}/ROOT"
+ROOT_CONTAINER_FS="${ROOT_POOL}/ROOT"
 ROOTFS="${ROOT_CONTAINER_FS}/debian"
 STAGE2_BOOTSTRAP=stage-2-bootstrap.sh
+
+declare -a ZFS_DATASETS
+declare -a ZFS_DATASET_OPTS
+
+# Appends zfs dataset information to ZFS_DATASETS and ZFS_DATASET_OPTS arrays
+# usage:
+# exec append_dataset <dataset_name> [dataset_opt1=foo] [dataset_opt2=bar] ...
+append_dataset(){
+    echo 'ZFS_DATASETS+=( "'$1'" )'
+    shift 1
+    echo 'ZFS_DATASET_OPTS+=( "'$@'" )'
+}
+
+exec append_dataset "$ROOT_CONTAINER_FS" canmount=off mountpoint=none
+exec append_dataset "$ROOTFS" canmount=noauto mountpoint=/
+exec append_dataset "$ROOT_POOL/home" setuid=off
+exec append_dataset "$ROOT_POOL/home/root" mountpoint=/root
+exec append_dataset "$ROOT_POOL/var" canmount=off setuid=off exec=off
+exec append_dataset "$ROOT_POOL/var/lib" exec=on
+exec append_dataset "$ROOT_POOL/var/cache" com.sun:auto-snapshot=false
+exec append_dataset "$ROOT_POOL/var/log"
+exec append_dataset "$ROOT_POOL/var/spool"
+exec append_dataset "$ROOT_POOL/var/tmp" com.sun:auto-snapshot=false exec=on
 
 sigint_handler(){
     >&2 echo "Caught SIGINT.  Exiting."
@@ -26,7 +50,7 @@ reverse(){
     done
 }
 
-if [ -z "$1" ]; then
+if [ -z "$ROOT_POOL" ]; then
     >&2 echo "Root pool argument required.  Unable to proceed.  Exiting"
     exit 1
 fi
@@ -38,30 +62,27 @@ Check your network and firewall configurations."
 exit 2
 fi
 
-if ! zfs list $ROOT_CONTAINER_FS >/dev/null 2>&1
-then
-    if ! zfs create -o canmount=off -o mountpoint=none $ROOT_CONTAINER_FS
-    then
-        >&2 echo "Failed to create $ROOT_CONTAINER_FS. Exiting."
-        exit 3
+i=0
+while [ $i -lt ${#ZFS_DATASETS[@]} ]; do
+    if ! zfs list $dataset >/dev/null 2>&1 ; then
+        # try to create dataset but don't mount it yet
+        if ! zfs create -o canmount=noauto; then
+            >&2 echo "Failed to create ZFS dataset '$dataset'. Exiting."
+            exit 4
+        fi
+
+        # reset the canmount property to its default
+        zfs set canmount=on $dataset
     fi
-fi
 
-if ! zfs list $ROOTFS >/dev/null 2>&1
-then
-    # create rootfs and keep it from complaining that it can't mount to / with
-    #   canmount=noauto
-    if ! zfs create -o canmount=noauto -o mountpoint=/ $ROOTFS
-    then
-        >&2 echo "Failed to create $ROOTFS. Exiting."
-        exit 4
-    fi
-fi
+    # Apply any properties that were specified with the dataset.
+    for property in ${ZFS_DATASET_OPTS[$i]}; do
+        zfs set $property $dataset
+    done
+    ((i++))
+done
 
-zpool set bootfs=$ROOTFS $1
-
-# make sure $ROOTFS mounts at / when we import its pool
-zfs set canmount=on $ROOTFS
+zpool set bootfs=$ROOTFS $ROOT_POOL
 
 zpool export -a
 

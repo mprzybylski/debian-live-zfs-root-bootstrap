@@ -1,3 +1,8 @@
+# FIXME:
+* Cover the rest of the special directories that need to be their own datasets in the bootstrap scripts 
+
+# TODO:
+
 # Background
 * FIXME: talk about live-manual-pdf
 
@@ -19,9 +24,8 @@
   * Create other pools and ZFS data sets as required for your environment
   * `bootstrap-zfs-debian-root.sh <root pool name> [extra-pool-1] [extra-pool-2]...`
 
-# TODO:
-* https://github.com/zfsonlinux/zfs/wiki/Debian-Jessie-Root-on-ZFS `--rbind` rather than `-o bind`  what's the difference?
-
+# References
+* https://github.com/zfsonlinux/zfs/wiki/Debian-Stretch-Root-on-ZFS
 
 # Old Notes used to get this project going
 
