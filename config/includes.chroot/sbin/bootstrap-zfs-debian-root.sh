@@ -19,23 +19,23 @@ declare -a ZFS_DATASET_OPTS
 
 # Appends zfs dataset information to ZFS_DATASETS and ZFS_DATASET_OPTS arrays
 # usage:
-# exec append_dataset <dataset_name> [dataset_opt1=foo] [dataset_opt2=bar] ...
+# exec `append_dataset <dataset_name> [dataset_opt1=foo] [dataset_opt2=bar] ...`
 append_dataset(){
     echo 'ZFS_DATASETS+=( "'$1'" )'
     shift 1
     echo 'ZFS_DATASET_OPTS+=( "'$@'" )'
 }
 
-exec append_dataset "$ROOT_CONTAINER_FS" canmount=off mountpoint=none
-exec append_dataset "$ROOTFS" canmount=noauto mountpoint=/
-exec append_dataset "$ROOT_POOL/home" setuid=off
-exec append_dataset "$ROOT_POOL/home/root" mountpoint=/root
-exec append_dataset "$ROOT_POOL/var" canmount=off setuid=off exec=off
-exec append_dataset "$ROOT_POOL/var/lib" exec=on
-exec append_dataset "$ROOT_POOL/var/cache" com.sun:auto-snapshot=false
-exec append_dataset "$ROOT_POOL/var/log"
-exec append_dataset "$ROOT_POOL/var/spool"
-exec append_dataset "$ROOT_POOL/var/tmp" com.sun:auto-snapshot=false exec=on
+exec `append_dataset "$ROOT_CONTAINER_FS" canmount=off mountpoint=none`
+exec `append_dataset "$ROOTFS" canmount=noauto mountpoint=/`
+exec `append_dataset "$ROOT_POOL/home" setuid=off`
+exec `append_dataset "$ROOT_POOL/home/root" mountpoint=/root`
+exec `append_dataset "$ROOT_POOL/var" canmount=off setuid=off exec=off`
+exec `append_dataset "$ROOT_POOL/var/lib" exec=on`
+exec `append_dataset "$ROOT_POOL/var/cache" com.sun:auto-snapshot=false`
+exec `append_dataset "$ROOT_POOL/var/log"`
+exec `append_dataset "$ROOT_POOL/var/spool"`
+exec `append_dataset "$ROOT_POOL/var/tmp" com.sun:auto-snapshot=false exec=on`
 
 sigint_handler(){
     >&2 echo "Caught SIGINT.  Exiting."
