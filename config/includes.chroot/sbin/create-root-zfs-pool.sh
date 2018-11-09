@@ -1,7 +1,7 @@
 #!/bin/bash
 
 USAGE="Usage:
-zpool-create.sh [-h][-nd] [-o property=value] ... [-O file-system-property=value]
+create-root-zfs-pool.sh [-h][-nd] [-o property=value] ... [-O file-system-property=value]
             ... [-m mountpoint] [-R root] [-t tname] pool vdev ...
 Description:    Wrapper for 'zpool create -f' that enforces certain additional
     options that are useful for ZFS root pools. Must be run as root.  See
@@ -19,4 +19,6 @@ done
 
 #FIXME: add root user check
 
-zpool create -f -O dedup=on -O compression=lz4 -O mountpoint=none $@
+zpool create -f -o ashift=12 -O relatime=on -O canmount=off \
+    -O compression=lz4 -O normalization=formD \
+    -O mountpoint=/ -R /mnt $@

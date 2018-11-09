@@ -31,7 +31,8 @@ eval `append_dataset "$ROOTFS" mountpoint=/`
 eval `append_dataset "$ROOT_POOL/home" setuid=off`
 eval `append_dataset "$ROOT_POOL/home/root" mountpoint=/root`
 eval `append_dataset "$ROOT_POOL/var" canmount=off setuid=off exec=off`
-eval `append_dataset "$ROOT_POOL/var/lib" exec=on`
+# FIXME: https://github.com/zfsonlinux/zfs/pull/7329 may to change the way /var/lib is mounted
+eval `append_dataset "$ROOT_POOL/var/lib" mountpoint=legacy exec=on`
 eval `append_dataset "$ROOT_POOL/var/cache" com.sun:auto-snapshot=false`
 eval `append_dataset "$ROOT_POOL/var/log"`
 eval `append_dataset "$ROOT_POOL/var/spool"`
@@ -93,6 +94,11 @@ for pool in $@; do
     fi
 done
 
+# FIXME: https://github.com/zfsonlinux/zfs/pull/7329 may to change the way /var/lib is mounted
+if ! mount -t zfs $ROOT_POOL/var/lib /mnt/var/lib; then
+    >&2 echo "Failed to mount $ROOT_POOL/var/lib at /mnt/var/lib"
+    exit 7
+fi
 
 # TODO: identify the root pool and add a bios boot partition to each non-cache, non-log leaf vdev
 

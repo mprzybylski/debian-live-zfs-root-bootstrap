@@ -18,6 +18,13 @@ DHCP_NETWORK_CONFIG
 done
 
 ln -s /proc/mounts /etc/mtab
+# FIXME: https://github.com/zfsonlinux/zfs/pull/7329 may to change the way /var/lib is mounted
+# See https://www.freedesktop.org/software/systemd/man/bootup.html and
+# the systemd.mount(5) man page for an explanation
+cat >> /etc/fstab <<VAR_LIB_MOUNT
+$(findmnt -no SOURCE / | cut -d / -f 1)/var/lib /var/lib zfs x-initrd.mount 0 0
+VAR_LIB_MOUNT
+
 
 apt_get_errors=0
 
