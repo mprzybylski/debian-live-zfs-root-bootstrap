@@ -27,7 +27,7 @@ append_dataset(){
 }
 
 eval `append_dataset "$ROOT_CONTAINER_FS" canmount=off mountpoint=none`
-eval `append_dataset "$ROOTFS" canmount=noauto mountpoint=/`
+eval `append_dataset "$ROOTFS" mountpoint=/`
 eval `append_dataset "$ROOT_POOL/home" setuid=off`
 eval `append_dataset "$ROOT_POOL/home/root" mountpoint=/root`
 eval `append_dataset "$ROOT_POOL/var" canmount=off setuid=off exec=off`
