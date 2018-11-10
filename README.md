@@ -7,8 +7,9 @@
 * FIXME: talk about live-manual-pdf
 
 # Building
-* Clone this project to a debian box
+* Clone this project to a debian "stretch," or newer, system
 * ***Become root** (this is a gross but unavoidable artifact of Debian's live-build architecture)* 
+* If the `live-build` package is not already present on the system `apt-get install live-build`
 * Change directories into the project root
 * `lb clean --purge && lb build`
 
