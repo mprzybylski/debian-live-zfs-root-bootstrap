@@ -1,7 +1,13 @@
 # FIXME:
 
 # TODO:
-* Add non-interactive method for setting root password
+* Add a hook wipe out the ZFS kernel modules while the chroot is being built to avoid potential GPL violations
+* Add a script to re-build ZFS kernel modules within the live image
+* Add a non-interactive mode to the bootstrap script
+  * Include non-interactive method of setting the root password
+  * Include non-interactive method of specifying a public SSH key for the root amount
+  * Throw an error if neither the SSH key nor the root password are specified
+
 
 # Background
 * FIXME: talk about live-manual-pdf
