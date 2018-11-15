@@ -1,8 +1,6 @@
 # FIXME:
 
 # TODO:
-* Add a hook wipe out the ZFS kernel modules while the chroot is being built to avoid potential GPL violations
-* Add a script to re-build ZFS kernel modules within the live image
 * Add a non-interactive mode to the bootstrap script
   * Include non-interactive method of setting the root password
   * Include non-interactive method of specifying a public SSH key for the root amount
