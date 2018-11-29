@@ -21,6 +21,7 @@
 * dd the resulting .iso file onto a USB key or connect it to your blank VM and boot it.
 * Once booted:
   * `sudo -i` to get root
+  * `build-zfs-kernel-modules.sh` to build the ZFS kernel module with DKMS
   * Create root pool with `create-root-zfs-pool.sh [options] <pool name> <vdev spec>` 
   (i.e. `zpool-create.sh foo-pool /dev/sda`) (Run `create-root-zfs-pool.sh` for more useful info.) 
   * Create a BIOS boot partition on your boot drive(s) (i.e. `create-bios-boot-partition.sh /dev/sda`)
