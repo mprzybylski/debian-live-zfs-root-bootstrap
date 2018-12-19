@@ -177,7 +177,7 @@ for pool in $@; do
 done
 
 # FIXME: https://github.com/zfsonlinux/zfs/pull/7329 may to change the way /var/lib is mounted
-if ! mkdir /mnt/var/lib && mount -t zfs $ROOT_POOL/var/lib /mnt/var/lib; then
+if ! ( mkdir -p /mnt/var/lib && mount -t zfs $ROOT_POOL/var/lib /mnt/var/lib ); then
     >&2 echo "Failed to mount $ROOT_POOL/var/lib at /mnt/var/lib"
     exit 7
 fi
