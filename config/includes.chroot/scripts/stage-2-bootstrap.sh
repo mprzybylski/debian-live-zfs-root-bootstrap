@@ -43,7 +43,7 @@ while getopts ":nr:b:h" option; do
     esac
 done
 
-shift $OPTIND
+shift $((OPTIND-1))
 
 # Sanity check: require root password arg in non-interactive mode
 if $NON_INTERACTIVE &&  [ -z "$ROOT_PASSWORD" ] && [ -z "$ROOT_PUBLIC_KEY" ]; then
@@ -54,7 +54,7 @@ $0 non-interactively.
 fi
 
 # Sanity check: grub config pre-seeding required in non-interactive mode
-if [ ${#BOOT_DEVICES[@]} -eq 0 ]; then
+if $NON_INTERACTIVE && [ ${#BOOT_DEVICES[@]} -eq 0 ]; then
     >&2 echo "At least one boot device must be specified when running $0
 non-interactively
 "
@@ -130,7 +130,7 @@ wrapt_get $NON_INTERACTIVE linux-image-amd64 linux-headers-amd64 lsb-release bui
 wrapt_get $NON_INTERACTIVE spl-dkms
 
 wrapt_get $NON_INTERACTIVE zfs-dkms zfs-initramfs
-wrapt_get $NON_INTERACTIVE install grub-pc
+wrapt_get $NON_INTERACTIVE grub-pc
 
 if [ $apt_get_errors -gt 0 ]; then
     >&2 echo "Failed to install one or more required, stage 2 packages."

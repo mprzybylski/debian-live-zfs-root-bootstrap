@@ -56,7 +56,7 @@ while getopts ":nr:k:b:h" option; do
     esac
 done
 
-shift $OPTIND
+shift $((OPTIND-1))
 
 # Sanity check: require root password arg in non-interactive mode
 if $NON_INTERACTIVE &&  [ -z "$ROOT_PASSWORD" ] && [ -z "$ROOT_PUBLIC_KEY" ]; then
@@ -67,7 +67,7 @@ $0 non-interactively.
 fi
 
 # Sanity check: grub config pre-seeding required in non-interactive mode
-if [ ${#BOOT_DEVICES[@]} -eq 0 ]; then
+if $NON_INTERACTIVE && [ ${#BOOT_DEVICES[@]} -eq 0 ]; then
     >&2 echo "At least one boot device must be specified when running $0
 non-interactively
 "
@@ -80,6 +80,12 @@ if $BAD_INPUT; then
 fi
 
 ROOT_POOL=$1
+
+if [ -z "$ROOT_POOL" ]; then
+    >&2 echo "Root pool argument required.  Unable to proceed.  Exiting"
+    exit 1
+fi
+
 DISTRO_NAME=stretch
 ROOT_CONTAINER_FS="${ROOT_POOL}/ROOT"
 ROOTFS="${ROOT_CONTAINER_FS}/debian"
@@ -132,11 +138,6 @@ reverse(){
         ((i--))
     done
 }
-
-if [ -z "$ROOT_POOL" ]; then
-    >&2 echo "Root pool argument required.  Unable to proceed.  Exiting"
-    exit 1
-fi
 
 # if we aren't using a deb-caching proxy, check connectivity to debian's HTTP redirector
 if [ -z "$http_proxy" ] && ! curl -IL http://httpredir.debian.org/ >/dev/null 2>&1; then

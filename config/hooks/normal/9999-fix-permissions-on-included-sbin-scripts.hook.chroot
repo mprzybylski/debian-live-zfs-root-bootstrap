@@ -5,6 +5,7 @@ INCLUDED_SBIN_SCRIPTS="bootstrap-zfs-debian-root.sh
     create-bios-boot-partition.sh
     create-zfs-data-partition.sh
     create-zfs-efi-partition.sh
+    build-zfs-kernel-modules.sh
     cleanup.sh"
 
 for script in $INCLUDED_SBIN_SCRIPTS; do
