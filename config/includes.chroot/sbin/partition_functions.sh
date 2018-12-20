@@ -1,3 +1,9 @@
+#@IgnoreInspection BashAddShebang
+
+# Reference on device node major and minor numbers:
+# https://www.kernel.org/doc/Documentation/admin-guide/devices.txt
+
+
 # $1: path to a block device, i.e. /dev/sda
 is_block_device(){
     return $(ls -l $1 | awk '{if(substr($1, 1, 1) == "b")print 0;else print 1; exit}')
@@ -5,7 +11,13 @@ is_block_device(){
 
 # $1: path to a block device, i.e. /dev/sda
 is_partition(){
-    return $(ls -l $1 | awk '{if($6==0)print 1;else print 0; exit}')
+    return $(ls -l $1 | awk '
+        # major number 8, ($5) is a SCSI device
+        # minor numbers for whole drives are multiples of 16
+        $5 ~ /^8,$/{if(($6%16)!=0)print 0;else print 1; exit}
+        # Add matching schemes for other major numbers and device types
+        # above this comment, as needed.
+    ')
 }
 
 # $1: path to a block device, i.e. /dev/sda
