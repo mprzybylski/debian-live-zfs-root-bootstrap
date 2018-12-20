@@ -22,7 +22,7 @@ BOOT_DEVICES=( )
 BAD_INPUT=false
 
 while getopts ":nr:b:h" option; do
-    case option in
+    case $option in
         n )
             NON_INTERACTIVE=true
         ;;

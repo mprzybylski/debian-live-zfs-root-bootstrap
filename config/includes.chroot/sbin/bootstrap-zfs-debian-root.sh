@@ -27,7 +27,7 @@ BAD_INPUT=false
 
 
 while getopts ":nr:k:b:h" option; do
-    case option in
+    case $option in
         n )
             NON_INTERACTIVE=true
         ;;

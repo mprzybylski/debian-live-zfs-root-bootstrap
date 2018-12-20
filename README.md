@@ -1,11 +1,7 @@
 # FIXME:
 
 # TODO:
-* Add a non-interactive mode to the bootstrap script
-  * Include non-interactive method of setting the root password
-  * Include non-interactive method of specifying a public SSH key for the root amount
-  * Throw an error if neither the SSH key nor the root password are specified
-
+* Test non-interactive mode
 
 # Background
 * FIXME: talk about live-manual-pdf
