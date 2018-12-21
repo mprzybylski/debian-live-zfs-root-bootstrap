@@ -29,3 +29,6 @@
 
 # References
 * https://github.com/zfsonlinux/zfs/wiki/Debian-Stretch-Root-on-ZFS
+* Linux kernel major and minor device numbering
+  * https://www.kernel.org/doc/Documentation/admin-guide/devices.txt (NVMe major number is currently 259)
+  * https://www.dell.com/support/article/us/en/04/sln312382/nvme-on-rhel7?lang=en

@@ -97,7 +97,7 @@ trap "service irqbalance stop" EXIT
 
 debconf-set-selections <<GRUB_BOOT_ZFS
 grub-pc	grub2/linux_cmdline	string	boot=zfs
-grub-pc	grub2/linux_cmdline_default	string	boot=zfs
+grub-pc	grub2/linux_cmdline_default	string
 GRUB_BOOT_ZFS
 
 if $NON_INTERACTIVE; then
@@ -105,8 +105,8 @@ if $NON_INTERACTIVE; then
 zfs-dkms	zfs-dkms/stop-build-for-32bit-kernel	boolean	true
 zfs-dkms	zfs-dkms/note-incompatible-licenses	note
 zfs-dkms	zfs-dkms/stop-build-for-unknown-kernel	boolean	true
-grub-pc	grub-pc/install_devices	multiselect	${BOOT_DEVICES[@]}
 NON_INTERACTIVE_DEBCONF_SELECTIONS
+# grub-pc	grub-pc/install_devices	multiselect	${BOOT_DEVICES[@]}
 fi
 
 apt_get_errors=0
@@ -137,10 +137,20 @@ if [ $apt_get_errors -gt 0 ]; then
     exit 1
 fi
 
-if ! update-grub; then
-    >&2 echo "'update-grub' failed.  Your system is probably not bootable."
+grub_errors=0
+for device in ${BOOT_DEVICES[@]}; do
+    grub-install $device || >&2 echo "'grub-install $device' failed." && ((grub_errors++))
+done
+
+if [ $grub_errors -gt 0 ]; then
+    >&2 echo "Exiting."
     exit 2
 fi
+
+#if ! update-grub; then
+#    >&2 echo "'update-grub' failed.  Your system is probably not bootable."
+#    exit 3
+#fi
 
 if $NON_INTERACTIVE; then
     chpasswd <<< "root:$ROOT_PASSWORD"

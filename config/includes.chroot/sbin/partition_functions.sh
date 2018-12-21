@@ -12,9 +12,9 @@ is_block_device(){
 # $1: path to a block device, i.e. /dev/sda
 is_partition(){
     return $(ls -l $1 | awk '
-        # major number 8, ($5) is a SCSI device
+        # major numbers 8,65-71,138-135 ($5) are SCSI disk devices
         # minor numbers for whole drives are multiples of 16
-        $5 ~ /^8,$/{if(($6%16)!=0)print 0;else print 1; exit}
+        $5 ~ /^(8|65|66|67|68|69|70|71|128|129|130|131|132|133|134|135),$/{if(($6%16)!=0)print 0;else print 1; exit}
         # Add matching schemes for other major numbers and device types
         # above this comment, as needed.
     ')
