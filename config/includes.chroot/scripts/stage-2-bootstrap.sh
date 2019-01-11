@@ -177,8 +177,9 @@ if ! update-grub; then
 fi
 
 #FIXME: non-interactive root-password setting still broken
+set -x
 if $NON_INTERACTIVE; then
-    if ! chpasswd <<< "root:$ROOT_PASSWORD"; then
+    if ! echo "root:$ROOT_PASSWORD" | chpasswd; then
         >&2 echo "Failed to set the root password with 'chpasswd'
 Exiting."
         exit 4
