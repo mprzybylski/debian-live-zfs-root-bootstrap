@@ -32,7 +32,9 @@ while getopts ":nr:b:i:h" option; do
             NON_INTERACTIVE=true
         ;;
         r )
+            set -x
             ROOT_PASSWORD="$OPTARG"
+            set +x
         ;;
         b )
             BOOT_DEVICES+=( "$OPTARG" )
@@ -99,7 +101,6 @@ zfs-dkms	zfs-dkms/stop-build-for-32bit-kernel	boolean	true
 zfs-dkms	zfs-dkms/note-incompatible-licenses	note
 zfs-dkms	zfs-dkms/stop-build-for-unknown-kernel	boolean	true
 NON_INTERACTIVE_DEBCONF_SELECTIONS
-# grub-pc	grub-pc/install_devices	multiselect	${BOOT_DEVICES[@]}
 fi
 
 apt_get_errors=0
