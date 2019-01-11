@@ -141,16 +141,9 @@ LOOPBACK_CONFIG
 # Get all non-loopback interface names
 NETWORK_INTERFACES=( `ip -o -a link | awk '$2 !~ /^lo:/{print substr($2, 1, length($2)-1)}'` )
 
-# FIXME: make this work for static or DHCP interfaces
-for interface in ${NETWORK_INTERFACES[@]}; do
-cat > /etc/network/interfaces.d/$interface <<DHCP_NETWORK_CONFIG
-auto $interface
-iface $interface inet dhcp
-DHCP_NETWORK_CONFIG
-done
 i=0
 while [[ $i -lt ${#NETWORK_INTERFACES[@]} ]]; do
-    if [[ -z "${IPV4_ADDRESSES[$i]}" ]] || [[ ${IPV4_ADDRESSES[$i]} == "dhcp" ]]; then
+    if [[ -z "${IPV4_ADDRESSES[$i]}" ]] || [[ "${IPV4_ADDRESSES[$i]}" == "dhcp" ]]; then
         cat > /etc/network/interfaces.d/${NETWORK_INTERFACES[$i]} <<DHCP_NETWORK_CONFIG
 auto ${NETWORK_INTERFACES[$i]}
 iface ${NETWORK_INTERFACES[$i]} inet dhcp
