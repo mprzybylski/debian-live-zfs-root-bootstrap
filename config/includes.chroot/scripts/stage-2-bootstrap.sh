@@ -171,13 +171,11 @@ if [ $grub_errors -gt 0 ]; then
     exit 2
 fi
 
-#if ! update-grub; then
-#    >&2 echo "'update-grub' failed.  Your system is probably not bootable."
-#    exit 3
-#fi
+if ! update-grub; then
+    >&2 echo "'update-grub' failed.  Your system is probably not bootable."
+    exit 3
+fi
 
-#FIXME: debug why root password isn't getting set
-set -x
 if $NON_INTERACTIVE; then
     chpasswd <<< "root:$ROOT_PASSWORD"
 else
