@@ -19,7 +19,7 @@
   * `sudo -i` to get root
   * `build-zfs-kernel-modules.sh` to build the ZFS kernel module with DKMS
   * Create root pool with `create-root-zfs-pool.sh [options] <pool name> <vdev spec>` 
-  (i.e. `zpool-create.sh foo-pool /dev/sda`) (Run `create-root-zfs-pool.sh` for more useful info.) 
+  (i.e. `create-root-zfs-pool.sh foo-pool /dev/sda`) (Run `create-root-zfs-pool.sh -h` for more useful info.) 
   * Create a BIOS boot partition on your boot drive(s) (i.e. `create-bios-boot-partition.sh /dev/sda`)
   * Create other pools and ZFS data sets as required for your environment
   * `bootstrap-zfs-debian-root.sh <root pool name> [extra-pool-1] [extra-pool-2]...`

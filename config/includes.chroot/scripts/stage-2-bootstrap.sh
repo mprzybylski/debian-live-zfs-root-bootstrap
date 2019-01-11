@@ -1,8 +1,6 @@
 #!/bin/bash --login
 
-# FIXME: add a way to pre-seed grub configuration
-
-# TODO: add flags for customized network settings, (multiline string that drops straight into file)
+# FIXME: add flags for customized network settings, (multiline string that drops straight into file)
 USAGE="\
 Usage: stage-2-bootstrap.sh [options]
 
@@ -14,14 +12,21 @@ Options:
   -b <boot device>          Where the GRUB bootloader should be written.  This
                             flag may be used more than once to install to
                             redundant boot devices.
+  -i <ipv4_addr/NN | dhcp>  IPv4 address / prefix length or 'dhcp' if the
+                            host's network interface should be automatically
+                            configured.  Can be specified multiple times for
+                            multiple network interfaces.  Address settings will
+                            be applied to non-loopback interfaces in the order
+                            they appear in the output of 'ip -o -a link'.
 "
 
 NON_INTERACTIVE=false
 ROOT_PASSWORD=""
 BOOT_DEVICES=( )
+IPV4_ADDRESSES=( )
 BAD_INPUT=false
 
-while getopts ":nr:b:h" option; do
+while getopts ":nr:b:i:h" option; do
     case $option in
         n )
             NON_INTERACTIVE=true
@@ -31,6 +36,9 @@ while getopts ":nr:b:h" option; do
         ;;
         b )
             BOOT_DEVICES+=( "$OPTARG" )
+        ;;
+        i )
+            IPV4_ADDRESSES+=( "$OPTARG" )
         ;;
         h )
             echo "$USAGE"
@@ -66,22 +74,7 @@ if $BAD_INPUT; then
     exit 1
 fi
 
-LOOPBACK_IF_NAME=lo
 
-cat > /etc/network/interfaces.d/lo <<LOOPBACK_CONFIG
-auto $LOOPBACK_IF_NAME
-iface $LOOPBACK_IF_NAME inet loopback
-LOOPBACK_CONFIG
-
-# Get all non-loopback interface names
-NETWORK_INTERFACES=( `ip -o -a link | awk '$2 !~ /^lo:/{print substr($2, 1, length($2)-1)}'` )
-
-for interface in ${NETWORK_INTERFACES[@]}; do
-cat > /etc/network/interfaces.d/$interface <<DHCP_NETWORK_CONFIG
-auto $interface
-iface $interface inet dhcp
-DHCP_NETWORK_CONFIG
-done
 
 ln -s /proc/mounts /etc/mtab
 # FIXME: https://github.com/zfsonlinux/zfs/pull/7329 may to change the way /var/lib is mounted
@@ -126,6 +119,7 @@ wrapt_get(){
 
 apt-get update || ((apt_get_errors++))
 
+wrapt_get $NON_INTERACTIVE openssh-server
 wrapt_get $NON_INTERACTIVE linux-image-amd64 linux-headers-amd64 lsb-release build-essential gdisk dkms
 wrapt_get $NON_INTERACTIVE spl-dkms
 
@@ -136,6 +130,40 @@ if [ $apt_get_errors -gt 0 ]; then
     >&2 echo "Failed to install one or more required, stage 2 packages."
     exit 1
 fi
+
+LOOPBACK_IF_NAME=lo
+
+cat > /etc/network/interfaces.d/$LOOPBACK_IF_NAME <<LOOPBACK_CONFIG
+auto $LOOPBACK_IF_NAME
+iface $LOOPBACK_IF_NAME inet loopback
+LOOPBACK_CONFIG
+
+# Get all non-loopback interface names
+NETWORK_INTERFACES=( `ip -o -a link | awk '$2 !~ /^lo:/{print substr($2, 1, length($2)-1)}'` )
+
+# FIXME: make this work for static or DHCP interfaces
+for interface in ${NETWORK_INTERFACES[@]}; do
+cat > /etc/network/interfaces.d/$interface <<DHCP_NETWORK_CONFIG
+auto $interface
+iface $interface inet dhcp
+DHCP_NETWORK_CONFIG
+done
+i=0
+while [[ $i -lt ${#NETWORK_INTERFACES[@]} ]]; do
+    if [[ -z "${IPV4_ADDRESSES[$i]}" ]] || [[ ${IPV4_ADDRESSES[$i]} == "dhcp" ]]; then
+        cat > /etc/network/interfaces.d/${NETWORK_INTERFACES[$i]} <<DHCP_NETWORK_CONFIG
+auto ${NETWORK_INTERFACES[$i]}
+iface ${NETWORK_INTERFACES[$i]} inet dhcp
+DHCP_NETWORK_CONFIG
+    else
+        cat > /etc/network/interfaces.d/${NETWORK_INTERFACES[$i]} <<STATIC_NETWORK_CONFIG
+auto ${NETWORK_INTERFACES[$i]}
+iface ${NETWORK_INTERFACES[$i]} inet static
+    address ${IPV4_ADDRESSES[$i]}
+STATIC_NETWORK_CONFIG
+    fi
+    ((i++))
+done
 
 grub_errors=0
 for device in ${BOOT_DEVICES[@]}; do
@@ -152,6 +180,8 @@ fi
 #    exit 3
 #fi
 
+#FIXME: debug why root password isn't getting set
+set -x
 if $NON_INTERACTIVE; then
     chpasswd <<< "root:$ROOT_PASSWORD"
 else

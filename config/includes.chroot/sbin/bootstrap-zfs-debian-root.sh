@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# TODO add flags for customized network settings
+# FIXME: figure out how non-interactive root password setting is broken
+# TODO: add -I flag for IPv6 configuration
 USAGE="\
 Usage: bootstrap-zfs-debian-root.sh [options] <rootpool> [pooltwo]...
 
@@ -14,6 +15,12 @@ Options:
   -b <boot device>          Block device or partition where the GRUB bootloader
                             should be written.  This flag may be used more than
                             once to install to redundant boot devices.
+  -i <ipv4_addr/NN | dhcp>  IPv4 address / prefix length or 'dhcp' if the
+                            host's network interface should be automatically
+                            configured.  Can be specified multiple times for
+                            multiple network interfaces.  Address settings will
+                            be applied to non-loopback interfaces in the order
+                            they appear in the output of 'ip -o -a link'.
   -h                        Print this usage information and exit.
 "
 
@@ -23,10 +30,11 @@ NON_INTERACTIVE=false
 ROOT_PASSWORD=""
 ROOT_PUBLIC_KEY=""
 BOOT_DEVICES=( )
+IPV4_ADDRESSES=( )
 BAD_INPUT=false
 
-
-while getopts ":nr:k:b:h" option; do
+# FIXME: handle flag for customized network settings
+while getopts ":nr:k:b:i:h" option; do
     case $option in
         n )
             NON_INTERACTIVE=true
@@ -48,6 +56,14 @@ while getopts ":nr:k:b:h" option; do
         h )
             echo "$USAGE"
             exit 0
+        ;;
+        i)
+            if [[ "$OPTARG" =~ ^dhcp|[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[1-3]?[0-9]$ ]] ; then
+                IPV4_ADDRESSES+=( "$OPTARG" )
+            else
+                >&2 echo "'$OPTARG' is not 'dhcp' or in address/prefix-length format, i.e. 87.65.43.21/24"
+                BAD_INPUT=true
+            fi
         ;;
         * )
             >&2 echo "'$OPTARG' is not a recognized option flag."
@@ -95,12 +111,18 @@ gen_stage2_command(){
     echo -n "chroot /mnt /root/$STAGE2_BOOTSTRAP "
     $NON_INTERACTIVE && echo -n " -n"
     [ -n "$ROOT_PASSWORD" ] && echo -n " -r \"$ROOT_PASSWORD\""
+
     i=0
     while [ $i -lt ${#BOOT_DEVICES[@]} ]; do
         echo -n " -b ${BOOT_DEVICES[$i]}"
         ((i++))
     done
-    echo $http_proxy
+
+    i=0
+        while [ $i -lt ${#IPV4_ADDRESSES[@]} ]; do
+        echo -n " -i ${IPV4_ADDRESSES[$i]}"
+        ((i++))
+    done
 }
 
 declare -a ZFS_DATASETS

@@ -17,6 +17,8 @@ is_partition(){
         $5 ~ /^(8|65|66|67|68|69|70|71|128|129|130|131|132|133|134|135),$/{if(($6%16)!=0)print 0;else print 1; exit}
         # Add matching schemes for other major numbers and device types
         # above this comment, as needed.
+        # print / return 1 if we did not match any block device major numbers
+        {print 1; exit}
     ')
 }
 
