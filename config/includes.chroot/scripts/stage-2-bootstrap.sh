@@ -160,7 +160,10 @@ done
 
 grub_errors=0
 for device in ${BOOT_DEVICES[@]}; do
-    grub-install $device || >&2 echo "'grub-install $device' failed." && ((grub_errors++))
+    if ! grub-install $device; then
+        >&2 echo "'grub-install $device' failed."
+        ((grub_errors++))
+    fi
 done
 
 if [ $grub_errors -gt 0 ]; then
