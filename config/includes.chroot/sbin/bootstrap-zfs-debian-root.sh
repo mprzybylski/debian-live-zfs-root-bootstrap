@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#FIXME: debugging code to remove later
+exec 2>> /tmp/bootstrap.trace
+
 # FIXME: figure out how non-interactive root password setting is broken
 # TODO: add -I flag for IPv6 configuration
 USAGE="\
@@ -244,6 +247,8 @@ mount -o bind /proc /mnt/proc
 cp /scripts/$STAGE2_BOOTSTRAP /mnt/root/$STAGE2_BOOTSTRAP
 # $http_proxy is an environment variable that (c)debootstrap honors for downloading packages
 # if it happens to point to caching proxy like apt-cacher-ng, it can greatly accelerate installs
+
+#FIXME: debugging code to remove later
 set -x
 if ! $(gen_stage2_command); then
     >&2 echo "Stage 2 bootstrap failed. Exiting"
