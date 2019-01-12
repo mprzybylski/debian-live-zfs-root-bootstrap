@@ -1,9 +1,7 @@
 #!/bin/bash --login
 
-#FIXME: debugging code to remove later
-exec 2>> /tmp/stage2.trace
 
-# FIXME: add flags for customized network settings, (multiline string that drops straight into file)
+# TODO: add -I flag for IPv6 configuration
 USAGE="\
 Usage: stage-2-bootstrap.sh [options]
 
@@ -35,10 +33,7 @@ while getopts ":nr:b:i:h" option; do
             NON_INTERACTIVE=true
         ;;
         r )
-            #FIXME: debugging code to remove later
-            set -x
             ROOT_PASSWORD="$OPTARG"
-            set +x
         ;;
         b )
             BOOT_DEVICES+=( "$OPTARG" )
@@ -181,9 +176,7 @@ if ! update-grub; then
     exit 3
 fi
 
-#FIXME: non-interactive root-password setting still broken
-#FIXME: debugging code to remove later
-set -x
+
 if $NON_INTERACTIVE; then
     if ! echo "root:$ROOT_PASSWORD" | chpasswd; then
         >&2 echo "Failed to set the root password with 'chpasswd'

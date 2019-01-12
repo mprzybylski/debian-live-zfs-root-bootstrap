@@ -1,9 +1,5 @@
 #!/bin/bash
 
-#FIXME: debugging code to remove later
-exec 2>> /tmp/bootstrap.trace
-
-# FIXME: figure out how non-interactive root password setting is broken
 # TODO: add -I flag for IPv6 configuration
 USAGE="\
 Usage: bootstrap-zfs-debian-root.sh [options] <rootpool> [pooltwo]...
@@ -36,7 +32,6 @@ BOOT_DEVICES=( )
 IPV4_ADDRESSES=( )
 BAD_INPUT=false
 
-# FIXME: handle flag for customized network settings
 while getopts ":nr:k:b:i:h" option; do
     case $option in
         n )
