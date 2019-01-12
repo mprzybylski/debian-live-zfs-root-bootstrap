@@ -113,7 +113,7 @@ STAGE2_BOOTSTRAP=stage-2-bootstrap.sh
 gen_stage2_command(){
     echo -n "chroot /mnt /root/$STAGE2_BOOTSTRAP "
     $NON_INTERACTIVE && echo -n " -n"
-    [ -n "$ROOT_PASSWORD" ] && echo -n " -r \"$ROOT_PASSWORD\""
+    [ -n "$ROOT_PASSWORD" ] && echo -n " -r $ROOT_PASSWORD"
 
     i=0
     while [ $i -lt ${#BOOT_DEVICES[@]} ]; do
