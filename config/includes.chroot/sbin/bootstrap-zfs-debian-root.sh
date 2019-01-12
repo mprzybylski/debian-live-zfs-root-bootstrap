@@ -235,7 +235,7 @@ fi
 cp -a /target_config/* /mnt/
 
 if [ -n "$ROOT_PUBLIC_KEY" ]; then
-    AUTH_KEYFILE=/root/.ssh/authorized_keys
+    AUTH_KEYFILE=/mnt/root/.ssh/authorized_keys
     SSH_CONFDIR=$(dirname "$AUTH_KEYFILE")
     mkdir -pm 700 $SSH_CONFDIR
     cat > "$AUTH_KEYFILE" <<< "$ROOT_PUBLIC_KEY"
