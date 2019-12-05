@@ -141,6 +141,14 @@ LB_NET_COW_SERVER=""
 # (Default: true)
 LB_NET_TARBALL="true"
 
+# $LB_ONIE: set onie
+# (Default: false)
+LB_ONIE="false"
+
+# $LB_ONIE_KERNEL_CMDLINE: set onie additional kernel cmdline options
+# (Default: )
+LB_ONIE_KERNEL_CMDLINE=""
+
 # $LB_FIRMWARE_BINARY: include firmware packages in debian-installer
 # (Default: true)
 LB_FIRMWARE_BINARY="true"
@@ -156,3 +164,7 @@ LB_SWAP_FILE_PATH=""
 # $LB_SWAP_FILE_SIZE: set swap file size
 # (Default: 512)
 LB_SWAP_FILE_SIZE="512"
+
+# $LB_UEFI_SECURE_BOOT: enable/disable UEFI secure boot
+# (Default: auto)
+LB_UEFI_SECURE_BOOT="auto"
