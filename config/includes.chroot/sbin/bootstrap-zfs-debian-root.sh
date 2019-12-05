@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# FIXME: refactor around creating zfs root at live-build time, ZFS-receiving it in this script
 # TODO: add -I flag for IPv6 configuration
 USAGE="\
 Usage: bootstrap-zfs-debian-root.sh [options] <rootpool> [pooltwo]...

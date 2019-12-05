@@ -1,0 +1,16 @@
+#!/bin/bash
+
+ZFS_TMP_IMAGE_NAME=tmppool.img
+ZFS_TMP_IMAGE_SIZE_MB=8192
+ZFS_TEMP_POOL_NAME=tmppool
+# Use standard zpool create syntax: '-o ashift=12 -o altroot=/foo/bar -o ...'
+ZFS_POOL_CREATION_OPTS="-o ashift=12"
+# Use standard zpool create syntax: '-O compression=lz4 -O recordsize=1M -O ...'
+# TODO: Find out if we can change compression when doing zfs receive?
+ZFS_ROOT_DATASET_OPTS="-O compression=gzip-9 -O recordsize=1M"
+
+# Immediately exit if any of the following commands fail
+set -e
+dd if=/dev/zero of=$ZFS_TMP_IMAGE_NAME bs=1M count=$ZFS_TMP_IMAGE_SIZE_MB
+LOOPDEV=`losetup -f $ZFS_TMP_IMAGE_NAME --show`
+zpool create $ZFS_POOL_CREATION_OPTS
