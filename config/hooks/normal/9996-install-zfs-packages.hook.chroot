@@ -2,4 +2,6 @@
 
 # ZFS packages must be installed late and separately because live build tries to configure them before
 # all of the ZFS pre-reqs are installed.
+set -e
+apt-get update
 DEBIAN_FRONTEND=noninteractive apt-get --assume-yes install zfsutils-linux spl-dkms zfs-dkms
