@@ -74,7 +74,7 @@ cleanup(){
 trap cleanup EXIT
 set -e # Immediately exit if any of the following commands fail
 
-dd if=/dev/zero of=$ZFS_TMP_BPOOL_ZFS_TMP_BPOOL_IMAGE_NAME bs=1M count=$ZFS_TMP_BPOOL_IMAGE_SIZE_MB
+dd if=/dev/zero of=$ZFS_TMP_BPOOL_IMAGE_NAME bs=1M count=$ZFS_TMP_BPOOL_IMAGE_SIZE_MB
 TMP_BPOOL_LOOPDEV=$(losetup -f $ZFS_TMP_BPOOL_IMAGE_NAME --show)
 LOOPDEVS[${#LOOPDEVS[@]}]=TMP_BPOOL_LOOPDEV
 zpool create $ZFS_TMP_BPOOL_CREATION_OPTS $ZFS_ZFS_BPOOL_TOPLEVEL_DATASET_OPTS $ZFS_TMP_BPOOL_NAME $TMP_BPOOL_LOOPDEV
