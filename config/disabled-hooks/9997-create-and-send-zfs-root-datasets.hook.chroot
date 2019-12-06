@@ -33,8 +33,8 @@ ZFS_TMP_BPOOL_CREATION_OPTS="-o ashift=12 -d \
     -o feature@project_quota=enabled \
     -o feature@resilver_defer=enabled \
     -o feature@allocation_classes=enabled \
-    -R '$(pwd)'/mnt"
-ZFS_TMP_RPOOL_CREATION_OPTS="-o ashift=12 -R '$(pwd)'/mnt"
+    -R $(pwd)/mnt"
+ZFS_TMP_RPOOL_CREATION_OPTS="-o ashift=12 -R $(pwd)/mnt"
 # Use standard zpool create syntax: '-O compression=lz4 -O recordsize=1M -O ...'
 # Use `zfs send --raw ...` to send encrypted data, and large, embeded or compressed records.
 ZFS_TMP_BPOOL_TOPLEVEL_DATASET_OPTS="-O acltype=posixacl -O canmount=off -O compression=lz4 -O devices=off \
