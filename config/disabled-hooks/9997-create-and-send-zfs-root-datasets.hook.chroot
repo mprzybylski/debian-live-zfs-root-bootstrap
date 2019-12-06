@@ -12,6 +12,7 @@ ZFS_TMP_RPOOL_IMAGE_SIZE_MB=8192
 ZFS_TMP_BPOOL_IMAGE_SIZE_MB=1024
 ZFS_TMP_RPOOL_NAME=tmp_rpool
 ZFS_TMP_BPOOL_NAME=tmp_bpool
+TARGET_DIRNAME=$(pwd)/mnt
 # Use standard zpool create syntax: '-o ashift=12 -o altroot=/foo/bar -o ...'
 #FIXME: do we need more than that?
 # Create the boot pool with _only_ the options supported by GRUB
@@ -33,8 +34,8 @@ ZFS_TMP_BPOOL_CREATION_OPTS="-o ashift=12 -d \
     -o feature@project_quota=enabled \
     -o feature@resilver_defer=enabled \
     -o feature@allocation_classes=enabled \
-    -R $(pwd)/mnt"
-ZFS_TMP_RPOOL_CREATION_OPTS="-o ashift=12 -R $(pwd)/mnt"
+    -R ${TARGET_DIRNAME}"
+ZFS_TMP_RPOOL_CREATION_OPTS="-o ashift=12 -R ${TARGET_DIRNAME}"
 # Use standard zpool create syntax: '-O compression=lz4 -O recordsize=1M -O ...'
 # Use `zfs send --raw ...` to send encrypted data, and large, embeded or compressed records.
 ZFS_TMP_BPOOL_TOPLEVEL_DATASET_OPTS="-O acltype=posixacl -O canmount=off -O compression=lz4 -O devices=off \
@@ -69,6 +70,7 @@ cleanup(){
     losetup -d ${LOOPDEVS[@]}
   fi
   rm -f $ZFS_TMP_RPOOL_IMAGE_NAME $ZFS_TMP_BPOOL_IMAGE_NAME
+  rm -rf $TARGET_DIRNAME
 }
 
 trap cleanup EXIT
@@ -101,12 +103,12 @@ zfs create                                 $ZFS_TMP_RPOOL_NAME/var/log
 zfs create                                 $ZFS_TMP_RPOOL_NAME/var/spool
 zfs create -o com.sun:auto-snapshot=false  $ZFS_TMP_RPOOL_NAME/var/cache
 zfs create -o com.sun:auto-snapshot=false  $ZFS_TMP_RPOOL_NAME/var/tmp
-chmod 1777 "$(pwd)"/mnt/var/tmp
+chmod 1777 "${TARGET_DIRNAME}/var/tmp"
 zfs create -o com.sun:auto-snapshot=false  $ZFS_TMP_RPOOL_NAME/tmp
-chmod 1777 "$(pwd)"/mnt/tmp
+chmod 1777 "${TARGET_DIRNAME}/tmp"
 
 echo "$(basename "$0") preparing $DEBUNTU_DISTNAME root datasets..."
-debootstrap $DEBUNTU_DISTNAME "$(pwd)"/mnt
+debootstrap $DEBUNTU_DISTNAME "${TARGET_DIRNAME}"
 zfs set devices=off $ZFS_TMP_RPOOL_NAME
 
 zfs snapshot -r ${ZFS_TMP_BPOOL_NAME}@${EXPORT_SNAPSHOT_NAME}
