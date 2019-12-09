@@ -38,6 +38,8 @@ fi
 # leaving chroot
 trap "service irqbalance stop" EXIT
 
+
+
 debconf-set-selections <<GRUB_BOOT_ZFS
 grub-pc	grub2/linux_cmdline	string	boot=zfs
 grub-pc	grub2/linux_cmdline_default	string
@@ -59,6 +61,10 @@ wrapt_get(){
 }
 
 apt-get update || ((apt_get_errors++))
+
+wrapt_get locales
+locale-gen --purge en_US.UTF-8
+update-locale LANG=en_US.UTF-8 LANGUAGE=en_US:en
 
 wrapt_get openssh-server
 # ZFS dependencies
