@@ -8,6 +8,7 @@
 
 
 
+DEBIAN_MIRROR=http://ftp.debian.org/debian
 DEBUNTU_DISTNAME=buster
 ZFS_TMP_RPOOL_IMAGE_NAME=tmp_rpool.img
 ZFS_TMP_BPOOL_IMAGE_NAME=tmp_bpool.img
@@ -47,6 +48,7 @@ ZFS_TMP_RPOOL_TOPLEVEL_DATASET_OPTS="-O compression=gzip-9 -O recordsize=1M -O a
     -O dnodesize=auto -O normalization=formD -O relatime=on -O xattr=sa -O mountpoint=/"
 
 STREAM_PKG_STAGE2_SCRIPTNAME=zfs-stream-pkg-stage-2-bootstrap.sh
+# To enable testing from outside the live-build chroot stage...
 if [ -z "$STREAM_PKG_STAGE2_SRC_LOC" ]; then
   STREAM_PKG_STAGE2_SRC_LOC=/scripts/$STREAM_PKG_STAGE2_SCRIPTNAME
 fi
@@ -125,7 +127,7 @@ zfs create -o com.sun:auto-snapshot=false  $ZFS_TMP_RPOOL_NAME/tmp
 chmod 1777 "${TARGET_DIRNAME}/tmp"
 
 echo "$(basename "$0") preparing $DEBUNTU_DISTNAME root datasets..."
-debootstrap $DEBUNTU_DISTNAME "${TARGET_DIRNAME}"
+debootstrap $DEBUNTU_DISTNAME "${TARGET_DIRNAME}" $DEBIAN_MIRROR
 # FIXME: Why?!?
 zfs set devices=off $ZFS_TMP_RPOOL_NAME
 
