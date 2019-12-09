@@ -5,6 +5,9 @@
 # Notes:
 #  * The rationale behind a separate boot pool is that it allows the enable feature flags to be limited to only those
 #    supported by GRUB
+
+
+
 DEBUNTU_DISTNAME=buster
 ZFS_TMP_RPOOL_IMAGE_NAME=tmp_rpool.img
 ZFS_TMP_BPOOL_IMAGE_NAME=tmp_bpool.img
@@ -42,6 +45,13 @@ ZFS_TMP_BPOOL_TOPLEVEL_DATASET_OPTS="-O acltype=posixacl -O canmount=off -O comp
     -O mountpoint=/"
 ZFS_TMP_RPOOL_TOPLEVEL_DATASET_OPTS="-O compression=gzip-9 -O recordsize=1M -O acltype=posixacl -O canmount=off \
     -O dnodesize=auto -O normalization=formD -O relatime=on -O xattr=sa -O mountpoint=/"
+
+STREAM_PKG_STAGE2_SCRIPTNAME=zfs-stream-pkg-stage-2-bootstrap.sh
+if [ -z "$STREAM_PKG_STAGE2_SRC_LOC" ]; then
+  STREAM_PKG_STAGE2_SRC_LOC=/scripts/$STREAM_PKG_STAGE2_SCRIPTNAME
+fi
+STREAM_PKG_STAGE2_DST=$TARGET_DIRNAME/$STREAM_PKG_STAGE2_SCRIPTNAME
+
 ZFS_SEND_CMD="zfs send --dedup --raw --replicate"
 EXPORT_SNAPSHOT_NAME=to_export
 BPOOL_STREAM_PKG_NAME=${DEBUNTU_DISTNAME}-boot.zfs
@@ -63,6 +73,13 @@ export_pools(){
 cleanup(){
   set +e
   echo "$(basename "$0") cleaning up..."
+
+  rm -f $STREAM_PKG_STAGE2_DST
+
+  umount "${TARGET_DIRNAME}/dev"
+  umount "${TARGET_DIRNAME}/proc"
+  umount "${TARGET_DIRNAME}/sys"
+
   export_pools "$ZFS_TMP_BPOOL_NAME" "$ZFS_TMP_RPOOL_NAME"
   if [ ${#LOOPDEVS[@]} -gt 0 ]; then
     # shellcheck disable=SC2068
@@ -87,7 +104,7 @@ zfs mount $ZFS_TMP_RPOOL_NAME/ROOT/debian
 dd if=/dev/zero of=$ZFS_TMP_BPOOL_IMAGE_NAME bs=1M count=$ZFS_TMP_BPOOL_IMAGE_SIZE_MB
 TMP_BPOOL_LOOPDEV=$(losetup -f $ZFS_TMP_BPOOL_IMAGE_NAME --show)
 LOOPDEVS[${#LOOPDEVS[@]}]=$TMP_BPOOL_LOOPDEV
-zpool create $ZFS_TMP_BPOOL_CREATION_OPTS $ZFS_BPOOL_TOPLEVEL_DATASET_OPTS $ZFS_TMP_BPOOL_NAME $TMP_BPOOL_LOOPDEV
+zpool create $ZFS_TMP_BPOOL_CREATION_OPTS $ZFS_TMP_BPOOL_TOPLEVEL_DATASET_OPTS $ZFS_TMP_BPOOL_NAME $TMP_BPOOL_LOOPDEV
 
 zfs create -o canmount=off -o mountpoint=none $ZFS_TMP_BPOOL_NAME/BOOT
 zfs create -o canmount=noauto -o mountpoint=/boot $ZFS_TMP_BPOOL_NAME/BOOT/debian
@@ -107,7 +124,17 @@ chmod 1777 "${TARGET_DIRNAME}/tmp"
 
 echo "$(basename "$0") preparing $DEBUNTU_DISTNAME root datasets..."
 debootstrap $DEBUNTU_DISTNAME "${TARGET_DIRNAME}"
+# FIXME: Why?!?
 zfs set devices=off $ZFS_TMP_RPOOL_NAME
+
+mount --rbind /dev "${TARGET_DIRNAME}/dev"
+mount --rbind /proc "${TARGET_DIRNAME}/proc"
+mount --rbind /sys "${TARGET_DIRNAME}/sys"
+
+# FIXME: copy zfs-stream-pkg-stage-2-bootstrap.sh to the target and chroot and run it
+cp $STREAM_PKG_STAGE2_SRC_LOC $STREAM_PKG_STAGE2_DST
+chmod +x $STREAM_PKG_STAGE2_DST
+chroot "$TARGET_DIRNAME" $STREAM_PKG_STAGE2_DST
 
 zfs snapshot -r ${ZFS_TMP_BPOOL_NAME}@${EXPORT_SNAPSHOT_NAME}
 zfs snapshot -r ${ZFS_TMP_RPOOL_NAME}@${EXPORT_SNAPSHOT_NAME}

@@ -1,4 +1,4 @@
 #!/bin/bash
 
-# Avoid potential GPL violations by nuking the ZFS kernel module binaries before generating the live image
+# Avoid appearance of CDDL or GPL violations by nuking the ZFS kernel module binaries before generating the live image
 dkms remove $(ls -d /usr/src/zfs* | awk -F / '{sub(/-/, "/", $4); print $4}') --all

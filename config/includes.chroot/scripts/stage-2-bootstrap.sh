@@ -1,6 +1,6 @@
 #!/bin/bash --login
 
-
+# FIXME: refactor around `zfs receive`d root and boot dataset trees.
 # TODO: add -I flag for IPv6 configuration
 USAGE="\
 Usage: stage-2-bootstrap.sh [options]
@@ -125,6 +125,10 @@ wrapt_get $NON_INTERACTIVE spl-dkms
 
 wrapt_get $NON_INTERACTIVE zfs-dkms zfs-initramfs
 wrapt_get $NON_INTERACTIVE grub-pc
+
+#FIXME: make sure this is in the right place
+#FIXME: create /etc/systemd/system/zfs-import-bootpool.service
+systemctl enable zfs-import-bootpool.service
 
 if [ $apt_get_errors -gt 0 ]; then
     >&2 echo "Failed to install one or more required, stage 2 packages."
