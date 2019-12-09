@@ -93,6 +93,7 @@ cleanup(){
 trap cleanup EXIT
 set -e # Immediately exit if any of the following commands fail
 
+modprobe zfs
 dd if=/dev/zero of=$ZFS_TMP_RPOOL_IMAGE_NAME bs=1M count=$ZFS_TMP_RPOOL_IMAGE_SIZE_MB
 TMP_RPOOL_LOOPDEV=$(losetup -f $ZFS_TMP_RPOOL_IMAGE_NAME --show)
 LOOPDEVS[${#LOOPDEVS[@]}]=$TMP_RPOOL_LOOPDEV
@@ -129,12 +130,9 @@ debootstrap $DEBUNTU_DISTNAME "${TARGET_DIRNAME}"
 zfs set devices=off $ZFS_TMP_RPOOL_NAME
 
 # FIXME: rbind turned out to be a terrible idea.  Some of those recursively bound filesystems refuse to unmount
-mkdir "${TARGET_DIRNAME}/dev"
 mount -o bind /dev "${TARGET_DIRNAME}/dev"
 mount -o bind /dev/pts "${TARGET_DIRNAME}/dev/pts"
-mkdir "${TARGET_DIRNAME}/proc"
 mount -o bind /proc "${TARGET_DIRNAME}/proc"
-mkdir "${TARGET_DIRNAME}/sys"
 mount -o bind /sys "${TARGET_DIRNAME}/sys"
 
 # FIXME: copy zfs-stream-pkg-stage-2-bootstrap.sh to the target and chroot and run it
