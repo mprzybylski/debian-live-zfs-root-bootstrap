@@ -76,6 +76,7 @@ cleanup(){
 
   rm -f $STREAM_PKG_STAGE2_DST
 
+  umount "${TARGET_DIRNAME}/dev/pts"
   umount "${TARGET_DIRNAME}/dev"
   umount "${TARGET_DIRNAME}/proc"
   umount "${TARGET_DIRNAME}/sys"
@@ -127,14 +128,19 @@ debootstrap $DEBUNTU_DISTNAME "${TARGET_DIRNAME}"
 # FIXME: Why?!?
 zfs set devices=off $ZFS_TMP_RPOOL_NAME
 
-mount --rbind /dev "${TARGET_DIRNAME}/dev"
-mount --rbind /proc "${TARGET_DIRNAME}/proc"
-mount --rbind /sys "${TARGET_DIRNAME}/sys"
+# FIXME: rbind turned out to be a terrible idea.  Some of those recursively bound filesystems refuse to unmount
+mkdir "${TARGET_DIRNAME}/dev"
+mount -o bind /dev "${TARGET_DIRNAME}/dev"
+mount -o bind /dev/pts "${TARGET_DIRNAME}/dev/pts"
+mkdir "${TARGET_DIRNAME}/proc"
+mount -o bind /proc "${TARGET_DIRNAME}/proc"
+mkdir "${TARGET_DIRNAME}/sys"
+mount -o bind /sys "${TARGET_DIRNAME}/sys"
 
 # FIXME: copy zfs-stream-pkg-stage-2-bootstrap.sh to the target and chroot and run it
 cp $STREAM_PKG_STAGE2_SRC_LOC $STREAM_PKG_STAGE2_DST
 chmod +x $STREAM_PKG_STAGE2_DST
-chroot "$TARGET_DIRNAME" $STREAM_PKG_STAGE2_DST
+chroot "$TARGET_DIRNAME" /$STREAM_PKG_STAGE2_SCRIPTNAME
 
 zfs snapshot -r ${ZFS_TMP_BPOOL_NAME}@${EXPORT_SNAPSHOT_NAME}
 zfs snapshot -r ${ZFS_TMP_RPOOL_NAME}@${EXPORT_SNAPSHOT_NAME}
