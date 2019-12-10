@@ -138,7 +138,7 @@ mount -o bind /dev/pts "${TARGET_DIRNAME}/dev/pts"
 mount -o bind /proc "${TARGET_DIRNAME}/proc"
 mount -o bind /sys "${TARGET_DIRNAME}/sys"
 
-cp -a "${INCLUDES_DOT_CHROOT_PREFIX}/target_config" "${TARGET_DIRNAME}"
+cp -av "${INCLUDES_DOT_CHROOT_PREFIX}/target_config/*" "${TARGET_DIRNAME}"
 cp $STREAM_PKG_STAGE2_SRC_LOC $STREAM_PKG_STAGE2_DST
 chmod +x $STREAM_PKG_STAGE2_DST
 chroot "$TARGET_DIRNAME" /$STREAM_PKG_STAGE2_SCRIPTNAME
