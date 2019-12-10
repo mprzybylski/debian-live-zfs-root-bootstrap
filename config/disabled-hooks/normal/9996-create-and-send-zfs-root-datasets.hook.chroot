@@ -8,7 +8,7 @@
 
 
 
-DEBIAN_MIRROR=http://ftp.debian.org/debian
+DEBIAN_MIRROR=http://deb.debian.org/debian
 DEBUNTU_DISTNAME=buster
 ZFS_TMP_RPOOL_IMAGE_NAME=tmp_rpool.img
 ZFS_TMP_BPOOL_IMAGE_NAME=tmp_bpool.img
