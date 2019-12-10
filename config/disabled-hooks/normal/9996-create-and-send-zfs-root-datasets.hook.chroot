@@ -48,10 +48,10 @@ ZFS_TMP_RPOOL_TOPLEVEL_DATASET_OPTS="-O compression=gzip-9 -O recordsize=1M -O a
     -O dnodesize=auto -O normalization=formD -O relatime=on -O xattr=sa -O mountpoint=/"
 
 STREAM_PKG_STAGE2_SCRIPTNAME=zfs-stream-pkg-stage-2-bootstrap.sh
-# To enable testing from outside the live-build chroot stage...
-if [ -z "$STREAM_PKG_STAGE2_SRC_LOC" ]; then
-  STREAM_PKG_STAGE2_SRC_LOC=/scripts/$STREAM_PKG_STAGE2_SCRIPTNAME
-fi
+# FIXME refactor so that the user can enter an includes.chroot prefix for testing outside the live-build chroot stage
+# Set $INCLUDES_DOT_CHROOT_PREFIX enable testing from outside the live-build chroot stage...
+STREAM_PKG_STAGE2_SRC_LOC=$INCLUDES_DOT_CHROOT_PREFIX/scripts/$STREAM_PKG_STAGE2_SCRIPTNAME
+
 STREAM_PKG_STAGE2_DST=$TARGET_DIRNAME/$STREAM_PKG_STAGE2_SCRIPTNAME
 
 ZFS_SEND_CMD="zfs send --dedup --raw --replicate"
@@ -131,13 +131,14 @@ debootstrap $DEBUNTU_DISTNAME "${TARGET_DIRNAME}" $DEBIAN_MIRROR
 # FIXME: Why?!?
 zfs set devices=off $ZFS_TMP_RPOOL_NAME
 
-# FIXME: rbind turned out to be a terrible idea.  Some of those recursively bound filesystems refuse to unmount
+# mount --rbind turned out to be a terrible idea.  Some of those recursively bound filesystems refuse to unmount
+# Back to -o bind...
 mount -o bind /dev "${TARGET_DIRNAME}/dev"
 mount -o bind /dev/pts "${TARGET_DIRNAME}/dev/pts"
 mount -o bind /proc "${TARGET_DIRNAME}/proc"
 mount -o bind /sys "${TARGET_DIRNAME}/sys"
 
-# FIXME: copy zfs-stream-pkg-stage-2-bootstrap.sh to the target and chroot and run it
+cp -a "${INCLUDES_DOT_CHROOT_PREFIX}/target_config" "${TARGET_DIRNAME}"
 cp $STREAM_PKG_STAGE2_SRC_LOC $STREAM_PKG_STAGE2_DST
 chmod +x $STREAM_PKG_STAGE2_DST
 chroot "$TARGET_DIRNAME" /$STREAM_PKG_STAGE2_SCRIPTNAME
