@@ -71,8 +71,8 @@ wrapt_get openssh-server
 wrapt_get linux-image-amd64 linux-headers-amd64 lsb-release build-essential gdisk dkms dpkg-dev
 
 #FIXME: remove when done debugging
-# echo "Opening a debugging shell..."
-# /bin/bash
+echo "Opening a debugging shell..."
+/bin/bash
 
 # Must be installed separately becuase ZFS tries to build DKMS modules before the headers package is installed,
 # and errors
