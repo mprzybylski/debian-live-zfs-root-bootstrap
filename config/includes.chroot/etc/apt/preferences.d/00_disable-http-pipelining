@@ -1,6 +1,0 @@
-ACQUIRE {
-    Queue-Mode 'access';
-    http {
-        Pipeline-Depth  0;
-    };
-};
