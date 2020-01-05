@@ -44,7 +44,7 @@ ZFS_TMP_RPOOL_CREATION_OPTS="-o ashift=12 -o cachefile=none -o altroot=${TARGET_
 ZFS_TMP_BPOOL_TOPLEVEL_DATASET_OPTS="-O acltype=posixacl -O canmount=off -O compression=lz4 -O devices=off \
     -O normalization=formD -O relatime=on -O xattr=sa \
     -O mountpoint=/"
-ZFS_TMP_RPOOL_TOPLEVEL_DATASET_OPTS="-O compression=gzip-9 -O recordsize=1M -O acltype=posixacl -O canmount=off \
+ZFS_TMP_RPOOL_TOPLEVEL_DATASET_OPTS="-O compression=lz4 -O recordsize=1M -O acltype=posixacl -O canmount=off \
     -O dnodesize=auto -O normalization=formD -O relatime=on -O xattr=sa -O mountpoint=/"
 
 STREAM_PKG_STAGE2_SCRIPTNAME=zfs-stream-pkg-stage-2-bootstrap.sh

@@ -121,9 +121,8 @@ apt-get update || ((apt_get_errors++))
 
 wrapt_get $NON_INTERACTIVE openssh-server
 wrapt_get $NON_INTERACTIVE linux-image-amd64 linux-headers-amd64 lsb-release build-essential gdisk dkms
-wrapt_get $NON_INTERACTIVE spl-dkms
 
-wrapt_get $NON_INTERACTIVE zfs-dkms zfs-initramfs
+wrapt_get $NON_INTERACTIVE zfs-initramfs
 wrapt_get $NON_INTERACTIVE grub-pc
 
 #FIXME: make sure this is in the right place

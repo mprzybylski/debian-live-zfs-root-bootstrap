@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# FIXME: refactor around creating zfs root at live-build time, ZFS-receiving it in this script
 # TODO: add -I flag for IPv6 configuration
 USAGE="\
 Usage: bootstrap-zfs-debian-root.sh [options] <rootpool> [pooltwo]...
@@ -23,8 +22,11 @@ Options:
                             they appear in the output of 'ip -o -a link'.
   -h                        Print this usage information and exit.
 "
-
-source /sbin/partition_functions.sh
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+# shellcheck disable=SC1090
+source "${SCRIPT_DIR}/bootstrap-zfs-debian-root-constants.sh"
+# shellcheck disable=SC1090
+source "${SCRIPT_DIR}/partition_functions.sh"
 
 NON_INTERACTIVE=false
 ROOT_PASSWORD=""
@@ -107,7 +109,7 @@ ROOTFS="${ROOT_CONTAINER_FS}/debian"
 STAGE2_BOOTSTRAP=stage-2-bootstrap.sh
 
 gen_stage2_command(){
-    echo -n "chroot /mnt /root/$STAGE2_BOOTSTRAP "
+    echo -n "chroot ${TARGET_DIR} /root/$STAGE2_BOOTSTRAP "
     $NON_INTERACTIVE && echo -n " -n"
     [ -n "$ROOT_PASSWORD" ] && echo -n " -r $ROOT_PASSWORD"
 
