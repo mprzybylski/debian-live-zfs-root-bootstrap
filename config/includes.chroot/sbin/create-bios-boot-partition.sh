@@ -15,7 +15,9 @@ if [ "$1" == '-h' ] || [ "$1" == '--help' ]; then
 fi
 
 # include common functions
-source /sbin/partition_functions.sh
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+LIB="$SCRIPT_DIR/../usr/lib"
+source "$LIB/bootstrap-zfs-root/partition_functions.sh"
 
 if [ -n "$1" ] && is_block_device "$1" && ! is_partition "$1"; then
     PARTNUM=`get_first_available_partition_number "$1"`

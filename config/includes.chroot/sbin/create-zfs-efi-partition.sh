@@ -14,7 +14,10 @@ if [ "$1" == '-h' ] || [ "$1" == '--help' ]; then
     exit 1
 fi
 
-source /sbin/partition_functions.sh
+# include common functions
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+LIB="$SCRIPT_DIR/../usr/lib"
+source "$LIB/bootstrap-zfs-root/partition_functions.sh"
 
 PARTNUM=9
 

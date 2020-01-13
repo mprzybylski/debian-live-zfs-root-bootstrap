@@ -75,3 +75,10 @@ See-also `debconf-set-selections`
 * Halt
 * Remove live CD or USB key
 * Restart
+
+```
+# TODO: streamline grub legacy bios and efi setup
+#root@sandbox:~# debconf-get-selections | grep grub
+#...
+#grub-pc	grub-pc/install_devices	multiselect	/dev/sda
+```
