@@ -1,0 +1,45 @@
+{
+  "builders": [
+    {
+      "cpus": 3,
+      "memory": 8192, //megabytes
+      "type": "vmware-iso",
+      "disk_size": 8192, //megabytes
+      "disk_adapter_type": "scsi",
+      "disk_type_id": "0",
+      "cdrom_adapter_type": "sata",
+      "network": "nat",
+      "network_adapter_type": "vmxnet3",
+      "iso_url": "file:///Users/mikeprz/live-image-amd64.hybrid.iso",
+      "iso_checksum": "920ca40e6767a6ce58625adfaec75edeeb67093bddfbcdd924dd4bc9a36971a9",
+      "iso_checksum_type": "sha256",
+      "ssh_username": "root",
+      //FIXME: vvvv auto-generate in wrapper script and templatize here
+      "ssh_private_key_file": "/Users/mikeprz/.ssh/packer_temp",
+      "ssh_timeout": "24h",
+      "boot_wait": "10s",
+      //FIXME: need to refactor for changes to buster procedure.
+      "boot_command": [
+        "<enter><wait20s>",
+        "sudo -i<enter><wait>",
+        "create-bios-boot-partition.sh /dev/sda<enter>", // should be /dev/sda1
+        "create-zfs-efi-partition /dev/sda<enter>",  //reserve the end of the disk for ZFS EFI partition.
+        "create-zfs-data-partition.sh /dev/sda 1G<enter>", // should be /dev/sda2
+        "create-zfs-data-partition.sh /dev/sda<enter>", // should be /dev/sda3 fills the remainder of the disk
+        "build-zfs-kernel-modules.sh;",
+        "modprobe zfs;",
+        "create-zfs-boot-pool.sh test_bootpool /dev/sda2;",
+        "create-zfs-root-pool.sh test_rootpool /dev/sda3;",
+        //FIXME: vvvv wrapper should plug in temp public key to -k argument
+        "bootstrap-zfs-debian-root.sh -n -k \"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIApjUSjLNA2d8JX7d5oe",
+        "Lr+Po7hY1r2MiuGAb17IEbT0 mikeprz@MIKEPRZ-M-56NF\" -B /dev/sda -r test_bootpool -b test_bootpool -i dhcp ",
+        "-i 192.168.70.254;",
+        // "shutdown -r now",
+        "<enter>"
+      ],
+      "shutdown_command": "shutdown -h now",
+      "keep_registered": true,
+      "skip_export": true
+    }
+  ]
+}

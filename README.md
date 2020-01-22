@@ -7,7 +7,8 @@
 * FIXME: talk about live-manual-pdf
 
 # Building
-* Clone this project to a debian "stretch," or newer, system
+* Clone this project to a debian "buster," or newer, system
+* Install `apt-cacher-ng` on your live image build system, if you have not already done so.  This project is currently configured to download packages via a caching proxy at `localhost:3142` to speed up iteration while reducing network usage.
 * ***Become root** (this is a gross but unavoidable artifact of Debian's live-build architecture)* 
 * If the `live-build` package is not already present on the system `apt-get install live-build`
 * Change directories into the project root

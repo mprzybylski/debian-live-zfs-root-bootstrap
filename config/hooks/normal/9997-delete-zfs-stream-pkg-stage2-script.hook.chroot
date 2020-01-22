@@ -1,5 +1,0 @@
-#!/bin/bash
-
-# This script is used when building, but not running the live image.
-# Delete it to keep it from being accidentally misused.
-rm /scripts/zfs-stream-pkg-stage-2-bootstrap.sh

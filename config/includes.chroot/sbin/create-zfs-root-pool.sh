@@ -28,23 +28,20 @@ declare -a SANITIZED_ZPOOL_ARGS
 args="$(getopt -o "dfnm:o:O:R:t:h" -l "help" -- "$@")"
 eval set -- "$args"
 
-# FIXME: validate pool name, but prohibit whitespace
-#             The pool name must begin with a let‐
-#             ter, and can only contain alphanumeric characters as well as un‐
-#             derscore ("_"), dash ("-"), colon (":"), space (" "), and period
-#             (".").
-# detect a '-h' or '--help' and be helpful
 while true; do
   case $1 in
-    -h|--help) echo "$USAGE"
+    -h|--help)
+      echo "$USAGE"
       exit 0
       ;;
-    -d|-n) SANITIZED_ZPOOL_ARGS+=("$1")
+    -d|-n)
+      SANITIZED_ZPOOL_ARGS+=("$1")
       #FIXME: include a warning that -d means "dry run" mode?
       ;;
     -f)# we are already using zpool create -f, just ignore here.
       ;;
-    -m) if [ "$2" != "/" ]; then
+    -m)
+      if [ "$2" != "/" ]; then
         >&2 echo "Warning: Root pool root dataset mount point must be '/'."
         >&2 echo "Ignoring '-m' flag."
         if ! [[ "$2" =~ ^- ]]; then
@@ -52,25 +49,34 @@ while true; do
         fi
       fi
       ;;
-    -o|-O|-t) if [[ "$2" =~ ^- ]]; then
+    -o|-O|-t)
+      if [[ "$2" =~ ^- ]]; then
         >&2 echo "Error: Argument expected for '$1' flag.  Exiting."
         exit 1
       fi
       SANITIZED_ZPOOL_ARGS+=("$1" "$2")
       shift
       ;;
-    -R) >&2 echo "Warning: for compatibility with other scripts on this live image, the pool's"
+    -R)
+      >&2 echo "Warning: for compatibility with other scripts on this live image, the pool's"
       >&2 echo "temporary mount point is set to $TARGET_DIRNAME.  Ignoring '$1' flag."
       if ! [[ "$2" =~ ^- ]]; then
         shift
       fi
       ;;
-    --) shift
+    --)
+      shift
       break
       ;;
   esac
   shift
 done
+
+if ! is_valid_zpool_name_without_spaces "$1"; then
+  >&2 echo "Error: '$1' contains characters that are not allowed in a ZFS pool name."
+  >&2 echo "$ZPOOL_NAME_ERROR_MSG_PART2"
+  exit 1
+fi
 
 modprobe zfs
 # shellcheck disable=SC2086

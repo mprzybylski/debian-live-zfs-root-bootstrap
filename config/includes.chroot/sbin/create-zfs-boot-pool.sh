@@ -6,12 +6,6 @@
 #  * The rationale behind a separate boot pool is that it allows the enable feature flags to be limited to only those
 #    supported by GRUB
 
-# FIXME: validate pool name, but prohibit whitespace
-#             The pool name must begin with a let‐
-#             ter, and can only contain alphanumeric characters as well as un‐
-#             derscore ("_"), dash ("-"), colon (":"), space (" "), and period
-#             (".").
-
 USAGE="Usage:
 create-zfs-boot-pool.sh [-h,--help] pool vdev ...
 Description:    Wrapper for 'zpool create -f' that enforces a pool
@@ -76,7 +70,14 @@ while true; do
   shift
 done
 
-ZFS_BPOOL_NAME="$1"
+if is_valid_zpool_name_without_spaces "$1"; then
+  ZFS_BPOOL_NAME="$1"
+else
+  >&2 echo "Error: '$1' contains characters that are not allowed in a ZFS pool name."
+  >&2 echo "$ZPOOL_NAME_ERROR_MSG_PART2"
+  exit 1
+fi
+
 modprobe zfs
 # shellcheck disable=SC2068
 zpool create -f -o ashift=12 $ZFS_BPOOL_CREATION_OPTS $ZFS_BPOOL_TOPLEVEL_DATASET_OPTS $@

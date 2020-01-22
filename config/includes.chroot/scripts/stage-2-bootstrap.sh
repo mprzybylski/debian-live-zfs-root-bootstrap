@@ -1,6 +1,5 @@
 #!/bin/bash --login
 
-# FIXME: add complete support for the -c arg
 USAGE="\
 Usage: stage-2-bootstrap.sh [options] -r <rootpool> -c </host/chroot/path>
 
@@ -163,7 +162,7 @@ ff02::2 ip6-allrouters
 ff02::3 ip6-allhosts
 ETC_SLASH_HOSTS
 
-# FIXME: enable zfs-mount-generator(8)
+# enable zfs-mount-generator(8)
 mkdir /etc/zfs/zfs-list.cache
 touch "/etc/zfs/zfs-list.cache/$ROOT_POOL"
 ln -s /usr/lib/zfs-linux/zed.d/history_event-zfs-list-cacher.sh /etc/zfs/zed.d

@@ -16,3 +16,18 @@ exit_if_not_root(){
     exit 1
   fi
 }
+
+# From zpool(8) man page:
+#             The pool name must begin with a let‐
+#             ter, and can only contain alphanumeric characters as well as un‐
+#             derscore ("_"), dash ("-"), colon (":"), space (" "), and period
+#             (".").
+# This function returns true, (exit code 0) for a pool name that meets the above requirements
+# BUT does not contain spaces.
+is_valid_zpool_name_without_spaces(){
+  [[ "$1" =~ ^[A-Za-z][-_:.A-Za-z0-9]* ]]
+}
+
+ZPOOL_NAME_ERROR_MSG_PART2="As noted in the zpool(8) man page, \"The pool name must begin with a letter, and
+can only contain alphanumeric characters as well as underscore ('_'), dash
+('-'), colon (':'), ...and period ('.').\""
