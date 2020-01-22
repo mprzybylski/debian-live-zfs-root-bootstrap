@@ -9,5 +9,5 @@ INCLUDED_SBIN_SCRIPTS="bootstrap-zfs-debian-root.sh
     cleanup.sh"
 
 for script in $INCLUDED_SBIN_SCRIPTS; do
-    chmod 744 /sbin/$script
+    chmod 744 /usr/sbin/$script
 done

@@ -13,8 +13,8 @@ Description:    Wrapper for 'zpool create -f' that enforces a pool
   source and the zpool(8) man page for more information."
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
-ETC="$SCRIPT_DIR/../etc"
-LIB="$SCRIPT_DIR/../usr/lib"
+ETC="$SCRIPT_DIR/../../etc"
+LIB="$SCRIPT_DIR/../lib"
 
 # shellcheck disable=SC1090
 source "$ETC/bootstrap-zfs-root/conf.sh"
