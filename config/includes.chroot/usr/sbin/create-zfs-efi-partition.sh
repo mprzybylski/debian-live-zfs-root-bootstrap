@@ -16,7 +16,7 @@ fi
 
 # include common functions
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
-LIB="$SCRIPT_DIR/../usr/lib"
+LIB="$SCRIPT_DIR/../lib"
 source "$LIB/bootstrap-zfs-root/partition_functions.sh"
 
 PARTNUM=9

@@ -40,8 +40,8 @@ Options:
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 CLEANUP_SCRIPT="$SCRIPT_DIR/cleanup.sh"
-ETC="$SCRIPT_DIR/../etc"
-LIB="$SCRIPT_DIR/../usr/lib"
+ETC="$SCRIPT_DIR/../../etc"
+LIB="$SCRIPT_DIR/../lib"
 
 # shellcheck disable=SC1090
 source "$ETC/bootstrap-zfs-root/conf.sh"

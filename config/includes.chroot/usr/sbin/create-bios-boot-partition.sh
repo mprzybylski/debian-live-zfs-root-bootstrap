@@ -16,7 +16,7 @@ fi
 
 # include common functions
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
-LIB="$SCRIPT_DIR/../usr/lib"
+LIB="$SCRIPT_DIR/../lib"
 source "$LIB/bootstrap-zfs-root/partition_functions.sh"
 
 if [ -n "$1" ] && is_block_device "$1" && ! is_partition "$1"; then
