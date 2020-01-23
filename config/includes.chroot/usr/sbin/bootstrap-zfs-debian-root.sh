@@ -67,7 +67,7 @@ BAD_INPUT=false
 LOOPBACK_IF_NAME=lo
 IMPORT_BOOTPOOL_UNIT_NAME=zfs-import-bootpool.service
 
-args="$(getopt -o "nr:R:k:b:B:i:H:h" -l "help" -- "$@")"
+args="$(getopt -o "nr:R:k:b:B:i:H:m:h" -l "help" -- "$@")"
 eval set -- "$args"
 
 while true; do
@@ -153,6 +153,21 @@ while true; do
             TARGET_HOSTNAME=$2
           else
             >&2 echo "Error: '$2' is not an RFC1123-compliant hostname."
+            BAD_INPUT=true
+          fi
+          shift
+        fi
+      ;;
+      -m)
+        if [[ "$2" =~ ^- ]]; then
+          >&2 echo "Error: Argument expected for '$1' flag"
+          BAD_INPUT=true
+        else
+          #Validate hostname according to RFC1123
+          if [[ "$2" =~ ^https?://^[A-Za-z0-9][.-A-Za-z0-9]*/ ]]; then
+            DEBIAN_MIRROR="$2"
+          else
+            >&2 echo "Error: '$2' is does not appear to be a valid debian mirror URL."
             BAD_INPUT=true
           fi
           shift
