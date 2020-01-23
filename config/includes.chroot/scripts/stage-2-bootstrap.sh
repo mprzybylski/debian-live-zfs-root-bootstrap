@@ -175,16 +175,18 @@ touch "/etc/zfs/zfs-list.cache/$ROOT_POOL"
 ln -s /usr/lib/zfs-linux/zed.d/history_event-zfs-list-cacher.sh /etc/zfs/zed.d
 zed -F &
 ZED_PID=$!
+kill -TERM $ZED_PID
+
+set -x # FIXME: remove after debugging complete
+# yank the altroot prefix off of the zfs-list cachefile.
+sed -Ei "s|$HOST_CHROOT_PATH/?|/|" "/etc/zfs/zfs-list.cache/$ROOT_POOL"
+set +x
 #FIXME: debugging code remove after validating these steps work
 cat "/etc/zfs/zfs-list.cache/$ROOT_POOL"
 echo "dropping to a shell in case further validation or troubleshooting are necessary"
 echo "have a look at the contents of '/etc/zfs/zfs-list.cache/$ROOT_POOL'"
 /bin/bash
 #FIXME: end debugging code
-kill -TERM $ZED_PID
-# yank the altroot prefix off of the zfs-list cachefile.
-sed -Ei "s|/$HOST_CHROOT_PATH/?|/|" "/etc/zfs/zfs-list.cache/$ROOT_POOL"
-
 
 systemctl enable zfs-import-bootpool.service
 
@@ -209,7 +211,7 @@ if ! update-grub; then
 fi
 
 if $NON_INTERACTIVE; then
-    if ! echo "root:$ROOT_PASSWORD" | chpasswd; then
+    if ! root_auth_keys_file_present && ! echo "root:$ROOT_PASSWORD" | chpasswd; then
         >&2 echo "Failed to set the root password with 'chpasswd'
 Exiting."
         exit 4
