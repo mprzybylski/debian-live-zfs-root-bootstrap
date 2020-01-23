@@ -80,4 +80,4 @@ fi
 
 modprobe zfs
 # shellcheck disable=SC2068
-zpool create -f -o ashift=12 $ZFS_BPOOL_CREATION_OPTS $ZFS_BPOOL_TOPLEVEL_DATASET_OPTS $@
+zpool create -f $ZFS_BPOOL_CREATION_OPTS $ZFS_BPOOL_TOPLEVEL_DATASET_OPTS $@

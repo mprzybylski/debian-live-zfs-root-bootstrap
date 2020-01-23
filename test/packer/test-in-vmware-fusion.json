@@ -11,7 +11,7 @@
       "network": "nat",
       "network_adapter_type": "vmxnet3",
       "iso_url": "file:///Users/mikeprz/live-image-amd64.hybrid.iso",
-      "iso_checksum": "ef78a826c664c5b766e47ae451e4412afe9a5ba3635a91a983d1b4aa33df8481",
+      "iso_checksum": "f5bfb3a458ab318345711c5ec87a3144fc4254619bc380c19d68780fca262e53",
       "iso_checksum_type": "sha256",
       "ssh_username": "root",
       //FIXME: vvvv auto-generate in wrapper script and templatize here
@@ -23,7 +23,7 @@
         "<enter><wait20s>",
         "sudo -i<enter><wait>",
         "create-bios-boot-partition.sh /dev/sda && ", // should be /dev/sda1
-        "create-zfs-efi-partition /dev/sda && ",  //reserve the end of the disk for ZFS EFI partition.
+        "create-zfs-efi-partition.sh /dev/sda && ",  //reserve the end of the disk for ZFS EFI partition.
         "create-zfs-data-partition.sh /dev/sda 1G && ", // should be /dev/sda2
         "create-zfs-data-partition.sh /dev/sda &&", // should be /dev/sda3 fills the remainder of the disk
         "build-zfs-kernel-modules.sh &&",
@@ -32,14 +32,14 @@
         "create-zfs-root-pool.sh test_rootpool /dev/sda3 && ",
         //FIXME: vvvv wrapper should plug in temp public key to -k argument
         "bootstrap-zfs-debian-root.sh -n -k \"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIApjUSjLNA2d8JX7d5oe",
-        "Lr+Po7hY1r2MiuGAb17IEbT0 mikeprz@MIKEPRZ-M-56NF\" -B /dev/sda -r test_bootpool -b test_bootpool -i dhcp ",
-        "-i 192.168.70.254",
+        "Lr+Po7hY1r2MiuGAb17IEbT0 mikeprz@MIKEPRZ-M-56NF\" -B /dev/sda -r test_rootpool -b test_bootpool -i dhcp ",
+        "-i 192.168.70.254/24",
         // "&& shutdown -r now",
         "<enter>"
       ],
-      "shutdown_command": "shutdown -h now",
-      "keep_registered": true,
-      "skip_export": true
+      "shutdown_command": "shutdown -h now"//,
+      //"keep_registered": true,
+      //"skip_export": true
     }
   ]
 }
