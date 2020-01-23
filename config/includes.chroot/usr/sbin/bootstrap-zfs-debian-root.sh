@@ -198,9 +198,9 @@ if $BAD_INPUT; then
 fi
 
 gen_stage2_command(){
-  echo -n "chroot ${TARGET_DIRNAME} /root/$STAGE2_BOOTSTRAP -r '$BOOT_POOL' -c '$TARGET_DIRNAME'"
+  echo -n "chroot ${TARGET_DIRNAME} /root/$STAGE2_BOOTSTRAP -r $ROOT_POOL -c $TARGET_DIRNAME"
   $NON_INTERACTIVE && echo -n " -n"
-  [ -n "$ROOT_PASSWORD" ] && echo -n " -r $ROOT_PASSWORD"
+  [ -n "$ROOT_PASSWORD" ] && echo -n " -R $ROOT_PASSWORD"
 
   i=0
   while [ $i -lt ${#BOOT_DEVICES[@]} ]; do
