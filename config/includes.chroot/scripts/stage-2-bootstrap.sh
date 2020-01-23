@@ -29,6 +29,11 @@ IPV4_ADDRESSES=( )
 BAD_INPUT=false
 HOSTNAME=$(lsb_release -si | awk '{print tolower($0)}')
 
+root_auth_keys_file_present(){
+  local ROOT_AUTH_KEYS_FILE=/root/.ssh/authorized_keys
+  [ -f "$ROOT_AUTH_KEYS_FILE" ] && [[ $(ls -s /root/.ssh/authorized_keys | cut -d \  -f 1) == 0 ]]
+}
+
 while getopts ":nc:r:R:B:H:h" option; do
   case $option in
     c )
@@ -68,7 +73,7 @@ if [ -z "$ROOT_POOL" ]; then
 fi
 
 # Sanity check: require root password arg in non-interactive mode
-if $NON_INTERACTIVE &&  [ -z "$ROOT_PASSWORD" ] && [ -z "$ROOT_PUBLIC_KEY" ]; then
+if $NON_INTERACTIVE &&  [ -z "$ROOT_PASSWORD" ] && ! root_auth_keys_file_present; then
     >&2 echo "A root password or root ssh public key must be specified when running
 $0 non-interactively.
 "
