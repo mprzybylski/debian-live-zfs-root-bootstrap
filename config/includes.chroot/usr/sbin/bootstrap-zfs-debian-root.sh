@@ -207,12 +207,6 @@ gen_stage2_command(){
     echo -n " -B ${BOOT_DEVICES[$i]}"
     ((i++))
   done
-
-  i=0
-  while [ $i -lt ${#IPV4_ADDRESSES[@]} ]; do
-    echo -n " -i ${IPV4_ADDRESSES[$i]}"
-    ((i++))
-  done
 }
 
 sigint_handler(){
