@@ -204,7 +204,7 @@ gen_stage2_command(){
 
   i=0
   while [ $i -lt ${#BOOT_DEVICES[@]} ]; do
-    echo -n " -b ${BOOT_DEVICES[$i]}"
+    echo -n " -B ${BOOT_DEVICES[$i]}"
     ((i++))
   done
 

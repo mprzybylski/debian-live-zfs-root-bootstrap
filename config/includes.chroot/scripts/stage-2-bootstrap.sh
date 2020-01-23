@@ -29,7 +29,7 @@ IPV4_ADDRESSES=( )
 BAD_INPUT=false
 HOSTNAME=$(lsb_release -si | awk '{print tolower($0)}')
 
-while getopts ":nc:r:R:b:B:H:h" option; do
+while getopts ":nc:r:R:B:H:h" option; do
   case $option in
     c )
       HOST_CHROOT_PATH="$OPTARG"
