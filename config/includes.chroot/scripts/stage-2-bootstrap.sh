@@ -31,7 +31,7 @@ HOSTNAME=$(lsb_release -si | awk '{print tolower($0)}')
 
 root_auth_keys_file_present(){
   local ROOT_AUTH_KEYS_FILE=/root/.ssh/authorized_keys
-  [ -f "$ROOT_AUTH_KEYS_FILE" ] && [[ $(ls -s /root/.ssh/authorized_keys | cut -d \  -f 1) == 0 ]]
+  [ -f "$ROOT_AUTH_KEYS_FILE" ] && [[ $(ls -s /root/.ssh/authorized_keys | cut -d \  -f 1) != 0 ]]
 }
 
 while getopts ":nc:r:R:B:H:h" option; do
@@ -150,6 +150,8 @@ if [ $apt_get_errors -gt 0 ]; then
     >&2 echo "Failed to install one or more required, stage 2 packages."
     exit 1
 fi
+
+HOSTNAME=$(lsb_release -si | awk '{print tolower($0)}')
 
 # set hostname.
 echo $HOSTNAME > /etc/hostname
