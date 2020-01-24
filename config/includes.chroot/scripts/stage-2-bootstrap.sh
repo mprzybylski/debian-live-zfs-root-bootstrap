@@ -180,14 +180,9 @@ mkdir /etc/zfs/zfs-list.cache
 set -x # FIXME: remove after debugging complete
 touch "$ZFS_LIST_CACHEFILE"
 ln -s /usr/lib/zfs-linux/zed.d/history_event-zfs-list-cacher.sh /etc/zfs/zed.d
-zed -F &
-ZED_PID=$!
-# zed is probably getting killed too fast when this procedure is being scripted rather than run manually
-# give zed a a few seconds to generate $ZFS_LIST_CACHEFILE
-sleep 5
-kill -TERM $ZED_PID
+# start zed and let it run for 5 seconds
+timeout -s TERM 5s zed -F
 cat "$ZFS_LIST_CACHEFILE"
-
 # yank the altroot prefix off of the zfs-list cachefile.
 sed -Ei "s|$HOST_CHROOT_PATH/?|/|" "$ZFS_LIST_CACHEFILE"
 
