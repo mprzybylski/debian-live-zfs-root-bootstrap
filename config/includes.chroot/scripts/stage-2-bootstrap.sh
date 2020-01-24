@@ -101,9 +101,15 @@ ln -s /proc/mounts /etc/mtab
 #$(findmnt -no SOURCE / | cut -d / -f 1)/var/lib /var/lib zfs x-initrd.mount 0 0
 #VAR_LIB_MOUNT
 
+# FIXME: dead code? Looks like this is no longer an issue in Buster
 # irqbalance gets automatically started by kernel installation and hangs onto file handles in /dev/  Stop it before
 # leaving chroot
-trap "service irqbalance stop" EXIT
+# trap "service irqbalance stop" EXIT
+
+debconf-set-selections <<LOCALE_SETTINGS
+locales locales/locales_to_be_generated multiselect     en_US ISO-8859-1, en_US.ISO-8859-15 ISO-8859-15, en_US.UTF-8 UTF-8
+locales locales/default_environment_locale      select  en_US.UTF-8
+LOCALE_SETTINGS
 
 debconf-set-selections <<GRUB_BOOT_ZFS
 grub-pc	grub2/linux_cmdline	string root="ZFS=$ROOT_POOL/ROOT/debian"
@@ -135,19 +141,18 @@ wrapt-get(){
 
 apt-get update || ((apt_get_errors++))
 
-wrapt-get $NON_INTERACTIVE locales
-locale-gen --purge en_US.UTF-8
-update-locale LANG=en_US.UTF-8 LANGUAGE=en_US:en
-
-
-wrapt-get $NON_INTERACTIVE openssh-server
-wrapt-get $NON_INTERACTIVE linux-image-amd64 linux-headers-amd64 lsb-release build-essential gdisk dkms
-
-wrapt-get $NON_INTERACTIVE zfs-initramfs
+# Make package installations dependent on their predecessors for easier troubleshooting
+wrapt-get $NON_INTERACTIVE locales && \
+wrapt-get $NON_INTERACTIVE openssh-server && \
+wrapt-get $NON_INTERACTIVE linux-image-amd64 linux-headers-amd64 lsb-release build-essential gdisk dkms && \
+wrapt-get $NON_INTERACTIVE zfs-initramfs && \
 wrapt-get $NON_INTERACTIVE grub-pc
 
 if [ $apt_get_errors -gt 0 ]; then
     >&2 echo "Failed to install one or more required, stage 2 packages."
+    #FIXME: remove when debugging complete
+    >&2 echo "Dropping to shell for troubleshooting"
+    /bin/bash --login
     exit 1
 fi
 
