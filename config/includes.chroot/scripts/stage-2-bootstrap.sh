@@ -174,14 +174,21 @@ ff02::2 ip6-allrouters
 ff02::3 ip6-allhosts
 ETC_SLASH_HOSTS
 
+ZED_RUNTIME=5
 ZFS_LIST_CACHEFILE="/etc/zfs/zfs-list.cache/$ROOT_POOL"
 # enable zfs-mount-generator(8)
 mkdir /etc/zfs/zfs-list.cache
 set -x # FIXME: remove after debugging complete
 touch "$ZFS_LIST_CACHEFILE"
 ln -s /usr/lib/zfs-linux/zed.d/history_event-zfs-list-cacher.sh /etc/zfs/zed.d
-# start zed and let it run for 5 seconds
-timeout -s TERM 5s zed -F
+
+zed -F &
+ZED_PID=$!
+# wait for zed to generate $ZFS_LIST_CACHEFILE
+while [[ $(ls -s "$ZFS_LIST_CACHEFILE" | cut -d \  -f 1) -eq 0 ]]; do
+  sleep 1
+done
+
 cat "$ZFS_LIST_CACHEFILE"
 # yank the altroot prefix off of the zfs-list cachefile.
 sed -Ei "s|$HOST_CHROOT_PATH/?|/|" "$ZFS_LIST_CACHEFILE"
@@ -194,6 +201,7 @@ echo "have a look at the contents of '$ZFS_LIST_CACHEFILE'"
 /bin/bash
 #FIXME: end debugging code
 
+# enable mounting of /boot at the correct time
 systemctl enable zfs-import-bootpool.service
 
 grub_errors=0

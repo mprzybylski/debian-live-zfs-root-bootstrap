@@ -11,7 +11,7 @@
       "network": "nat",
       "network_adapter_type": "vmxnet3",
       "iso_url": "file:///Users/mikeprz/live-image-amd64.hybrid.iso",
-      "iso_checksum": "5de7985990bbe697ddffe7747d6117e39893f66f2787ad6131838561b6a90070",
+      "iso_checksum": "55b929880ea6d1749becf5340808410201d5256bec699561d3a2507c602b227b",
       "iso_checksum_type": "sha256",
       "ssh_username": "root",
       //FIXME: vvvv auto-generate in wrapper script and templatize here
@@ -25,9 +25,9 @@
         "create-bios-boot-partition.sh /dev/sda && ", // should be /dev/sda1
         "create-zfs-efi-partition.sh /dev/sda && ",  //reserve the end of the disk for ZFS EFI partition.
         "create-zfs-data-partition.sh /dev/sda 1G && ", // should be /dev/sda2
-        "create-zfs-data-partition.sh /dev/sda &&", // should be /dev/sda3 and fill the remainder of the disk
-        "build-zfs-kernel-modules.sh &&",
-        "modprobe zfs &&",
+        "create-zfs-data-partition.sh /dev/sda &&" , // should be /dev/sda3 and fill the remainder of the disk
+        "build-zfs-kernel-modules.sh && ",
+        "modprobe zfs && ",
         "create-zfs-boot-pool.sh test_bootpool /dev/sda2 && ",
         "create-zfs-root-pool.sh test_rootpool /dev/sda3 && ",
         //FIXME: vvvv wrapper should plug in temp public key to -k argument

@@ -282,7 +282,9 @@ zfs create -o canmount=off                 "$ROOT_POOL/usr"
 zfs create                                 "$ROOT_POOL/usr/local"
 
 set -x
-POOLS_TO_EXPORT=("$(reverse "$@")")
+if [ $# -gt 0 ]; then
+  POOLS_TO_EXPORT=("$(reverse "$@")")
+fi
 POOLS_TO_EXPORT+=("$BOOT_POOL" "$ROOT_POOL")
 set +x
 
@@ -339,8 +341,8 @@ if [ -n "$ROOT_PUBLIC_KEY" ]; then
     chmod 600 "$AUTH_KEYFILE"
 fi
 
-# FIXME: enable mounting of /boot at the correct time
-cat "${TARGET_DIRNAME}/etc/systemd/system/$IMPORT_BOOTPOOL_UNIT_NAME" <<ZFS_IMPORT_BOOTPOOL_DOT_SERVICE
+# enable mounting of /boot at the correct time
+cat > "${TARGET_DIRNAME}/etc/systemd/system/$IMPORT_BOOTPOOL_UNIT_NAME" <<ZFS_IMPORT_BOOTPOOL_DOT_SERVICE
 [Unit]
     DefaultDependencies=no
     Before=zfs-import-scan.service
