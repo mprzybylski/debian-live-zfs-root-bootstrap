@@ -174,22 +174,28 @@ ff02::2 ip6-allrouters
 ff02::3 ip6-allhosts
 ETC_SLASH_HOSTS
 
+ZFS_LIST_CACHEFILE="/etc/zfs/zfs-list.cache/$ROOT_POOL"
 # enable zfs-mount-generator(8)
 mkdir /etc/zfs/zfs-list.cache
-touch "/etc/zfs/zfs-list.cache/$ROOT_POOL"
+set -x # FIXME: remove after debugging complete
+touch "$ZFS_LIST_CACHEFILE"
 ln -s /usr/lib/zfs-linux/zed.d/history_event-zfs-list-cacher.sh /etc/zfs/zed.d
 zed -F &
 ZED_PID=$!
+# zed is probably getting killed too fast when this procedure is being scripted rather than run manually
+# give zed a a few seconds to generate $ZFS_LIST_CACHEFILE
+sleep 5
 kill -TERM $ZED_PID
+cat "$ZFS_LIST_CACHEFILE"
 
-set -x # FIXME: remove after debugging complete
 # yank the altroot prefix off of the zfs-list cachefile.
-sed -Ei "s|$HOST_CHROOT_PATH/?|/|" "/etc/zfs/zfs-list.cache/$ROOT_POOL"
-set +x
+sed -Ei "s|$HOST_CHROOT_PATH/?|/|" "$ZFS_LIST_CACHEFILE"
+
 #FIXME: debugging code remove after validating these steps work
-cat "/etc/zfs/zfs-list.cache/$ROOT_POOL"
+set +x
+cat "$ZFS_LIST_CACHEFILE"
 echo "dropping to a shell in case further validation or troubleshooting are necessary"
-echo "have a look at the contents of '/etc/zfs/zfs-list.cache/$ROOT_POOL'"
+echo "have a look at the contents of '$ZFS_LIST_CACHEFILE'"
 /bin/bash
 #FIXME: end debugging code
 

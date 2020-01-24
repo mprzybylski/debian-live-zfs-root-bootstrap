@@ -3,12 +3,6 @@
 # TODO: add -I flag for IPv6 configuration
 # TODO: streamline grub legacy bios and efi setup
 
-# FIXME: validate boot and root pool names, but prohibit whitespace
-#             The pool name must begin with a let‐
-#             ter, and can only contain alphanumeric characters as well as un‐
-#             derscore ("_"), dash ("-"), colon (":"), space (" "), and period
-#             (".").
-
 USAGE="\
 Usage: bootstrap-zfs-debian-root.sh [options] -r <rootpool> -b <bootpool>
   [additional_pool_1] [additional_pool_2]...
@@ -77,7 +71,12 @@ while true; do
           >&2 echo "Error: Argument expected for '$1' flag"
           BAD_INPUT=true
         else
-          ROOT_POOL="$2"
+          if is_valid_zpool_name_without_spaces "$2"; then
+            ROOT_POOL="$2"
+          else
+            >&2 echo "Error: invalid argument to the '$1' flag"
+            >&2 echo "$ZPOOL_NAME_ERROR_MSG_PART2"
+          fi
           shift
         fi
         ;;
@@ -86,9 +85,14 @@ while true; do
             >&2 echo "Error: Argument expected for '$1' flag"
             BAD_INPUT=true
           else
-            BOOT_POOL="$2"
-            shift
+            if is_valid_zpool_name_without_spaces "$2"; then
+              BOOT_POOL="$2"
+           else
+            >&2 echo "Error: invalid argument to the '$1' flag"
+            >&2 echo "$ZPOOL_NAME_ERROR_MSG_PART2"
           fi
+          shift
+        fi
       ;;
       -n )
         NON_INTERACTIVE=true
@@ -226,7 +230,7 @@ gen_stage2_command(){
 
 sigint_handler(){
   >&2 echo "Caught SIGINT.  Exiting."
-  "$CLEANUP_SCRIPT" "$POOLS_TO_EXPORT"
+  "$CLEANUP_SCRIPT" "${POOLS_TO_EXPORT[@]}"
   exit
 }
 
@@ -277,8 +281,10 @@ zfs create                                 "$ROOT_POOL/opt"
 zfs create -o canmount=off                 "$ROOT_POOL/usr"
 zfs create                                 "$ROOT_POOL/usr/local"
 
+set -x
 POOLS_TO_EXPORT=("$(reverse "$@")")
 POOLS_TO_EXPORT+=("$BOOT_POOL" "$ROOT_POOL")
+set +x
 
 trap sigint_handler INT
 
@@ -390,6 +396,7 @@ if ! $(gen_stage2_command); then
     >&2 echo "Stage 2 bootstrap failed. Exiting"
     exit 5
 fi
-set +x
 
+#FIXME: somehow cleanup isn't getting pools to export
 "$CLEANUP_SCRIPT" "${POOLS_TO_EXPORT[@]}"
+set +x
