@@ -184,10 +184,11 @@ ln -s /usr/lib/zfs-linux/zed.d/history_event-zfs-list-cacher.sh /etc/zfs/zed.d
 
 zed -F &
 ZED_PID=$!
-# wait for zed to generate $ZFS_LIST_CACHEFILE
-while [[ $(ls -s "$ZFS_LIST_CACHEFILE" | cut -d \  -f 1) -eq 0 ]]; do
+# wait for zed to write to $ZFS_LIST_CACHEFILE
+while [[ $(find "$ZFS_LIST_CACHEFILE" -printf '%\n' ) -eq 0 ]]; do
   sleep 1
 done
+kill -TERM $ZED_PID
 
 cat "$ZFS_LIST_CACHEFILE"
 # yank the altroot prefix off of the zfs-list cachefile.
