@@ -11,7 +11,7 @@
       "network": "nat",
       "network_adapter_type": "vmxnet3",
       "iso_url": "file:///Users/mikeprz/live-image-amd64.hybrid.iso",
-      "iso_checksum": "48e7925138f95e2d6de858256a79de44b4103206e867fe5c0c27d86f013086e9",
+      "iso_checksum": "76e4095c961a22de6ae84e62b75c5bc1dfd638e124d3930405a94c38be875b52",
       "iso_checksum_type": "sha256",
       "ssh_username": "root",
       //FIXME: vvvv auto-generate in wrapper script and templatize here
@@ -33,7 +33,7 @@
         //FIXME: vvvv wrapper should plug in temp public key to -k argument
         "bootstrap-zfs-debian-root.sh -n -k \"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIApjUSjLNA2d8JX7d5oe",
         "Lr+Po7hY1r2MiuGAb17IEbT0 mikeprz@MIKEPRZ-M-56NF\" -B /dev/sda -r test_rootpool -b test_bootpool -i dhcp ",
-        "-i 192.168.70.254/24 ",
+        "-R '$cr3wedUpP@$$w0rd!' -i 192.168.70.254/24 ",
         //"-m http://sjc-linux.cisco.com/debian/ ",
         // "&& shutdown -r now",
         "<enter>"

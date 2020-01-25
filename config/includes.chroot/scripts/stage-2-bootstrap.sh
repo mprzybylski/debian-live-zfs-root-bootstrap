@@ -73,7 +73,7 @@ if [ -z "$ROOT_POOL" ]; then
 fi
 
 # Sanity check: require root password arg in non-interactive mode
-if $NON_INTERACTIVE &&  [ -z "$ROOT_PASSWORD" ] && ! root_auth_keys_file_present; then
+if $NON_INTERACTIVE &&  [ -z "$ROOT_PASSWORD" ]; then
     >&2 echo "A root password or root ssh public key must be specified when running
 $0 non-interactively.
 "
@@ -185,7 +185,7 @@ ln -s /usr/lib/zfs-linux/zed.d/history_event-zfs-list-cacher.sh /etc/zfs/zed.d
 zed -F &
 ZED_PID=$!
 # wait for zed to write to $ZFS_LIST_CACHEFILE
-while [[ $(find "$ZFS_LIST_CACHEFILE" -printf '%\n' ) -eq 0 ]]; do
+while [[ $(find "$ZFS_LIST_CACHEFILE" -printf '%s\n' ) -eq 0 ]]; do
   sleep 1
 done
 kill -TERM $ZED_PID
@@ -225,8 +225,9 @@ if ! update-grub; then
     exit 3
 fi
 
-if $NON_INTERACTIVE; then
-    if ! root_auth_keys_file_present && ! echo "root:$ROOT_PASSWORD" | chpasswd; then
+#FIXME: how do you leave the root password unset, and keep the account from getting locked?
+if [ -n "$ROOT_PASSWORD" ]; then
+    if ! echo "root:$ROOT_PASSWORD" | chpasswd; then
         >&2 echo "Failed to set the root password with 'chpasswd'
 Exiting."
         exit 4
