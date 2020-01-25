@@ -226,6 +226,7 @@ if ! update-grub; then
 fi
 
 #FIXME: how do you leave the root password unset, and keep the account from getting locked?
+set -x
 if [ -n "$ROOT_PASSWORD" ]; then
     if ! echo "root:$ROOT_PASSWORD" | chpasswd; then
         >&2 echo "Failed to set the root password with 'chpasswd'
@@ -241,3 +242,4 @@ else
         fi
     done
 fi
+set +x

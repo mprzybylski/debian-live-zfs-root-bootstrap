@@ -11,7 +11,7 @@
       "network": "nat",
       "network_adapter_type": "vmxnet3",
       "iso_url": "file:///Users/mikeprz/live-image-amd64.hybrid.iso",
-      "iso_checksum": "76e4095c961a22de6ae84e62b75c5bc1dfd638e124d3930405a94c38be875b52",
+      "iso_checksum": "d4f87b1e5264a50d41db535d42d56d50c0b673a87c1c0d5f00a12355dd326b94",
       "iso_checksum_type": "sha256",
       "ssh_username": "root",
       //FIXME: vvvv auto-generate in wrapper script and templatize here

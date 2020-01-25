@@ -196,10 +196,9 @@ if [ -z "$BOOT_POOL" ]; then
 fi
 
 # Sanity check: require root password arg in non-interactive mode
-if $NON_INTERACTIVE &&  [ -z "$ROOT_PASSWORD" ] && [ -z "$ROOT_PUBLIC_KEY" ]; then
-    >&2 echo "Error: A root password or root ssh public key must be specified when running
-$0 non-interactively.
-"
+if $NON_INTERACTIVE &&  [ -z "$ROOT_PASSWORD" ]; then
+    >&2 echo "Error: A root password must be specified when running $0
+    non-interactively."
     BAD_INPUT=true
 fi
 
