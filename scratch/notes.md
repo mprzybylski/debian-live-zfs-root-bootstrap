@@ -82,3 +82,7 @@ See-also `debconf-set-selections`
 #...
 #grub-pc	grub-pc/install_devices	multiselect	/dev/sda
 ```
+
+Troubleshooting
+`/bin/plymouth could not be executed and failed.` is a red herring.  It really has to do with a broken fstab entry.
+mountpoint=legacy wasn't set for the /boot filesystem which has a dedicated line in /etc/fstab

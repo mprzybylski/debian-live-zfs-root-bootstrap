@@ -87,6 +87,7 @@ while true; do
           else
             if is_valid_zpool_name_without_spaces "$2"; then
               BOOT_POOL="$2"
+              BOOT_FS_NAME="$BOOT_POOL/BOOT/debian"
            else
             >&2 echo "Error: invalid argument to the '$1' flag"
             >&2 echo "$ZPOOL_NAME_ERROR_MSG_PART2"
@@ -264,8 +265,8 @@ zfs create -o canmount=off -o mountpoint=none "$BOOT_POOL/BOOT"
 
 zfs create -o canmount=noauto -o mountpoint=/ "$ROOT_POOL/ROOT/debian"
 zfs mount "$ROOT_POOL/ROOT/debian"
-zfs create -o canmount=noauto -o mountpoint=/boot "$BOOT_POOL/BOOT/debian"
-zfs mount "$BOOT_POOL/BOOT/debian"
+zfs create -o canmount=noauto -o mountpoint=/boot "$BOOT_BOOT_FS_NAME"
+zfs mount "$BOOT_FS_NAME"
 
 zfs create                                 "$ROOT_POOL/home"
 zfs create -o mountpoint=/root             "$ROOT_POOL/home/root"
@@ -280,12 +281,11 @@ zfs create                                 "$ROOT_POOL/opt"
 zfs create -o canmount=off                 "$ROOT_POOL/usr"
 zfs create                                 "$ROOT_POOL/usr/local"
 
-set -x
+
 if [ $# -gt 0 ]; then
   POOLS_TO_EXPORT=("$(reverse "$@")")
 fi
 POOLS_TO_EXPORT+=("$BOOT_POOL" "$ROOT_POOL")
-set +x
 
 trap sigint_handler INT
 
@@ -341,6 +341,7 @@ if [ -n "$ROOT_PUBLIC_KEY" ]; then
 fi
 
 # enable mounting of /boot at the correct time
+zfs set mountpoint=legacy $BOOT_FS_NAME
 cat > "${TARGET_DIRNAME}/etc/systemd/system/$IMPORT_BOOTPOOL_UNIT_NAME" <<ZFS_IMPORT_BOOTPOOL_DOT_SERVICE
 [Unit]
     DefaultDependencies=no
@@ -357,7 +358,7 @@ cat > "${TARGET_DIRNAME}/etc/systemd/system/$IMPORT_BOOTPOOL_UNIT_NAME" <<ZFS_IM
 ZFS_IMPORT_BOOTPOOL_DOT_SERVICE
 
 cat >> "${TARGET_DIRNAME}/etc/fstab" <<BOOT_FS_SPEC
-$BOOT_POOL/BOOT/debian /boot zfs nodev,relatime,x-systemd.requires=$IMPORT_BOOTPOOL_UNIT_NAME 0 0
+$BOOT_FS_NAME /boot zfs nodev,relatime,x-systemd.requires=$IMPORT_BOOTPOOL_UNIT_NAME 0 0
 BOOT_FS_SPEC
 
 cat > "${TARGET_DIRNAME}/etc/network/interfaces.d/$LOOPBACK_IF_NAME" <<LOOPBACK_CONFIG
