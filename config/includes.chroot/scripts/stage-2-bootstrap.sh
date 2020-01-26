@@ -139,6 +139,9 @@ wrapt-get(){
     fi
 }
 
+# setting mountpoint=legacy unmounts a ZFS filesystem.  Remount it based on its fstab entry
+mount /boot
+
 apt-get update || ((apt_get_errors++))
 
 # Make package installations dependent on their predecessors for easier troubleshooting

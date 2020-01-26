@@ -257,16 +257,18 @@ i=0
 
 zpool export -a
 
-zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=none $ROOT_POOL
-zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=none $BOOT_POOL
+zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=none "$ROOT_POOL"
+zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=none "$BOOT_POOL"
 
 zfs create -o canmount=off -o mountpoint=none "$ROOT_POOL/ROOT"
 zfs create -o canmount=off -o mountpoint=none "$BOOT_POOL/BOOT"
 
 zfs create -o canmount=noauto -o mountpoint=/ "$ROOT_POOL/ROOT/debian"
 zfs mount "$ROOT_POOL/ROOT/debian"
+set -x
 zfs create -o canmount=noauto -o mountpoint=/boot "$BOOT_FS_NAME"
 zfs mount "$BOOT_FS_NAME"
+set +x
 
 zfs create                                 "$ROOT_POOL/home"
 zfs create -o mountpoint=/root             "$ROOT_POOL/home/root"
