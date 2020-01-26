@@ -265,7 +265,7 @@ zfs create -o canmount=off -o mountpoint=none "$BOOT_POOL/BOOT"
 
 zfs create -o canmount=noauto -o mountpoint=/ "$ROOT_POOL/ROOT/debian"
 zfs mount "$ROOT_POOL/ROOT/debian"
-zfs create -o canmount=noauto -o mountpoint=/boot "$BOOT_BOOT_FS_NAME"
+zfs create -o canmount=noauto -o mountpoint=/boot "$BOOT_FS_NAME"
 zfs mount "$BOOT_FS_NAME"
 
 zfs create                                 "$ROOT_POOL/home"
