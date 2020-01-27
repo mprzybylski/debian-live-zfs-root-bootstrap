@@ -10,8 +10,18 @@
       "cdrom_adapter_type": "sata",
       "network": "nat",
       "network_adapter_type": "vmxnet3",
+      "vmx_data": {
+        //this is a nasty-ass hack to work around the fact that VMWare Fusion for Mac sets the guest "hardware" clock
+        //to the local time, and the guest thinks its UTC
+        "rtc.diffFromUTC": "-28800", //(8 hours, in seconds)
+        "ethernet1.connectionType": "custom",
+        "ethernet1.addressType": "generated",
+        "ethernet1.virtualDev": "vmxnet3",
+        "ethernet1.present": "TRUE",
+        "ethernet1.vnet": "vmnet2"
+      },
       "iso_url": "file:///Users/mikeprz/live-image-amd64.hybrid.iso",
-      "iso_checksum": "ce59e75bdb032b171323a6e5f3a264c103a8ab6ffc31f7f32a4bff45d6fb7538",
+      "iso_checksum": "04133058ad1a90c209cf84a94ebd31747d5d1b850f85149cde5c4509f7024f2b",
       "iso_checksum_type": "sha256",
       "ssh_username": "root",
       //FIXME: vvvv auto-generate in wrapper script and templatize here
@@ -33,8 +43,8 @@
         //FIXME: vvvv wrapper should plug in temp public key to -k argument
         "bootstrap-zfs-debian-root.sh -n -k \"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIApjUSjLNA2d8JX7d5oe",
         "Lr+Po7hY1r2MiuGAb17IEbT0 mikeprz@MIKEPRZ-M-56NF\" -B /dev/sda -r test_rootpool -b test_bootpool -i dhcp ",
-        "-R '$cr3wedUpP@$$w0rd!' -i 192.168.70.254/24 ",
-        //"-m http://sjc-linux.cisco.com/debian/ ",
+        "-R 'changeme' -i 192.168.70.254/24 ",
+        "-m http://sjc-linux.cisco.com/debian/ ",
         // "&& shutdown -r now",
         "<enter>"
       ],

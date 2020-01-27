@@ -1,5 +1,7 @@
 #!/bin/bash --login
 
+#FIXME: add a debug flag
+
 USAGE="\
 Usage: stage-2-bootstrap.sh [options] -r <rootpool> -c </host/chroot/path>
 
@@ -27,7 +29,6 @@ ROOT_PASSWORD=""
 BOOT_DEVICES=( )
 IPV4_ADDRESSES=( )
 BAD_INPUT=false
-HOSTNAME=$(lsb_release -si | awk '{print tolower($0)}')
 
 root_auth_keys_file_present(){
   local ROOT_AUTH_KEYS_FILE=/root/.ssh/authorized_keys
@@ -94,17 +95,6 @@ if $BAD_INPUT; then
 fi
 
 ln -s /proc/mounts /etc/mtab
-# FIXME: https://github.com/zfsonlinux/zfs/pull/7329 may to change the way /var/lib is mounted
-# See https://www.freedesktop.org/software/systemd/man/bootup.html and
-# the systemd.mount(5) man page for an explanation
-#cat >> /etc/fstab <<VAR_LIB_MOUNT
-#$(findmnt -no SOURCE / | cut -d / -f 1)/var/lib /var/lib zfs x-initrd.mount 0 0
-#VAR_LIB_MOUNT
-
-# FIXME: dead code? Looks like this is no longer an issue in Buster
-# irqbalance gets automatically started by kernel installation and hangs onto file handles in /dev/  Stop it before
-# leaving chroot
-# trap "service irqbalance stop" EXIT
 
 debconf-set-selections <<LOCALE_SETTINGS
 locales locales/locales_to_be_generated multiselect     en_US ISO-8859-1, en_US.ISO-8859-15 ISO-8859-15, en_US.UTF-8 UTF-8
@@ -142,7 +132,11 @@ wrapt-get(){
 # setting mountpoint=legacy unmounts a ZFS filesystem.  Remount it based on its fstab entry
 mount /boot
 
-apt-get update || ((apt_get_errors++))
+if !apt-get update; then
+  >&2 echo "'apt-get update' exited with status code $?.  Dropping to a shell for troubleshooting..."
+  /bin/bash --login
+  exit 1
+fi
 
 # Make package installations dependent on their predecessors for easier troubleshooting
 wrapt-get $NON_INTERACTIVE locales && \
@@ -153,9 +147,6 @@ wrapt-get $NON_INTERACTIVE grub-pc
 
 if [ $apt_get_errors -gt 0 ]; then
     >&2 echo "Failed to install one or more required, stage 2 packages."
-    #FIXME: remove when debugging complete
-    >&2 echo "Dropping to shell for troubleshooting"
-    /bin/bash --login
     exit 1
 fi
 
@@ -181,7 +172,7 @@ ZED_RUNTIME=5
 ZFS_LIST_CACHEFILE="/etc/zfs/zfs-list.cache/$ROOT_POOL"
 # enable zfs-mount-generator(8)
 mkdir /etc/zfs/zfs-list.cache
-set -x # FIXME: remove after debugging complete
+
 touch "$ZFS_LIST_CACHEFILE"
 ln -s /usr/lib/zfs-linux/zed.d/history_event-zfs-list-cacher.sh /etc/zfs/zed.d
 
@@ -193,17 +184,8 @@ while [[ $(find "$ZFS_LIST_CACHEFILE" -printf '%s\n' ) -eq 0 ]]; do
 done
 kill -TERM $ZED_PID
 
-cat "$ZFS_LIST_CACHEFILE"
 # yank the altroot prefix off of the zfs-list cachefile.
 sed -Ei "s|$HOST_CHROOT_PATH/?|/|" "$ZFS_LIST_CACHEFILE"
-
-#FIXME: debugging code remove after validating these steps work
-set +x
-cat "$ZFS_LIST_CACHEFILE"
-echo "dropping to a shell in case further validation or troubleshooting are necessary"
-echo "have a look at the contents of '$ZFS_LIST_CACHEFILE'"
-/bin/bash
-#FIXME: end debugging code
 
 # enable mounting of /boot at the correct time
 systemctl enable zfs-import-bootpool.service
@@ -227,7 +209,6 @@ if ! update-grub; then
     >&2 echo "'update-grub' failed.  Your system is probably not bootable."
     exit 3
 fi
-
 
 if [ -n "$ROOT_PASSWORD" ]; then
     if ! echo "root:$ROOT_PASSWORD" | chpasswd; then

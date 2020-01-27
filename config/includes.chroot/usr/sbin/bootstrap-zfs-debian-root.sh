@@ -2,6 +2,7 @@
 
 # TODO: add -I flag for IPv6 configuration
 # TODO: streamline grub legacy bios and efi setup
+# FIXME: add a debug flag
 
 USAGE="\
 Usage: bootstrap-zfs-debian-root.sh [options] -r <rootpool> -b <bootpool>
@@ -169,7 +170,7 @@ while true; do
           BAD_INPUT=true
         else
           #Validate hostname according to RFC1123
-          if [[ "$2" =~ ^https?://^[A-Za-z0-9][.-A-Za-z0-9]*/ ]]; then
+          if [[ "$2" =~ ^https?://[A-Za-z0-9][-A-Za-z0-9.]*/ ]]; then
             DEBIAN_MIRROR="$2"
           else
             >&2 echo "Error: '$2' is does not appear to be a valid debian mirror URL."
@@ -393,14 +394,11 @@ cp /scripts/$STAGE2_BOOTSTRAP "${TARGET_DIRNAME}/root/$STAGE2_BOOTSTRAP"
 # $http_proxy is an environment variable that (c)debootstrap honors for downloading packages
 # if it happens to point to caching proxy like apt-cacher-ng, it can greatly accelerate installs
 
-#FIXME: debugging code to remove later
-set -x
 # shellcheck disable=SC2091
 if ! $(gen_stage2_command); then
     >&2 echo "Stage 2 bootstrap failed. Exiting"
     exit 5
 fi
 
-#FIXME: somehow cleanup isn't getting pools to export
 "$CLEANUP_SCRIPT" "${POOLS_TO_EXPORT[@]}"
 set +x
