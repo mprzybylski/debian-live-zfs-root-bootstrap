@@ -11,9 +11,6 @@
       "network": "nat",
       "network_adapter_type": "vmxnet3",
       "vmx_data": {
-        //this is a nasty-ass hack to work around the fact that VMWare Fusion for Mac sets the guest "hardware" clock
-        //to the local time, and the guest thinks its UTC
-        "rtc.diffFromUTC": "-28800", //(8 hours, in seconds)
         "ethernet1.connectionType": "custom",
         "ethernet1.addressType": "generated",
         "ethernet1.virtualDev": "vmxnet3",
@@ -21,7 +18,7 @@
         "ethernet1.vnet": "vmnet2"
       },
       "iso_url": "file:///Users/mikeprz/live-image-amd64.hybrid.iso",
-      "iso_checksum": "04133058ad1a90c209cf84a94ebd31747d5d1b850f85149cde5c4509f7024f2b",
+      "iso_checksum": "80398cba6f916b336d2311508342a7c474cc55b24beb12a192f17db5b11e2fc2",
       "iso_checksum_type": "sha256",
       "ssh_username": "root",
       //FIXME: vvvv auto-generate in wrapper script and templatize here

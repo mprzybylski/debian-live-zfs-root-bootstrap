@@ -132,7 +132,7 @@ wrapt-get(){
 # setting mountpoint=legacy unmounts a ZFS filesystem.  Remount it based on its fstab entry
 mount /boot
 
-if !apt-get update; then
+if ! apt-get update; then
   >&2 echo "'apt-get update' exited with status code $?.  Dropping to a shell for troubleshooting..."
   /bin/bash --login
   exit 1
