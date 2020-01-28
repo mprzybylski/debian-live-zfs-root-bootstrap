@@ -5,6 +5,9 @@ Usage: correct-host-timezone-offset.sh < +hh:mm | -hh:mm >
 
 Correct a virtualizaiton guest's clock when it is set to the local time and the
 guest is expecting the virtualized hardware clock to be in UTC.
+
+The single argument is given as the local time zone's positive or negative
+offset in hours and minutes from UTC.
 "
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
@@ -31,13 +34,14 @@ case $1 in
   ;;
   *)
     if [[ "$1" =~ ^([-+])([0-9][0-9]?):([0-9]{2})$ ]]; then
-      if [ "${BASH_REMATCH[1]}" == "-" ]; then
+      if [ "${BASH_REMATCH[1]}" == "+" ]; then
         SIGN=-1
       fi
       OFFSET_HOURS=${BASH_REMATCH[2]}
       OFFSET_MINUTES=${BASH_REMATCH[3]}
     else
-      >&2 echo "ERROR: time offset must be specified in the format '+HH:MM' or '-HH:MM'"
+      >&2 echo "ERROR: time local time zone offset from UTC must be specified
+in the format '+HH:MM' or '-HH:MM'"
       BAD_INPUT=true
     fi
   ;;
