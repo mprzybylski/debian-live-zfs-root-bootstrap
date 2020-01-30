@@ -6,8 +6,7 @@
 #  * The rationale behind a separate boot pool is that it allows the enable feature flags to be limited to only those
 #    supported by GRUB
 
-USAGE="Usage:
-create-zfs-boot-pool.sh [-h,--help] pool vdev ...
+USAGE="Usage: create-zfs-boot-pool.sh [-h,--help] pool vdev ...
 Description:    Wrapper for 'zpool create -f' that enforces a pool
   configuration that is compatible with GRUB. Must be run as root.  See script
   source and the zpool(8) man page for more information."

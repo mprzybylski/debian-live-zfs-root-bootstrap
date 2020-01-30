@@ -8,7 +8,9 @@ USAGE="\
 Usage: bootstrap-zfs-debian-root.sh [options] -r <rootpool> -b <bootpool>
   [additional_pool_1] [additional_pool_2]...
 
-Installs bootable Debian root filesystem to the specified ZFS pool(s).
+Installs bootable Debian root filesystem to the specified ZFS pool(s). The
+administrator may specify additional pools that are also mounted on the
+bootstrapped system.
 
 Options:
   -r <zfs pool name>        Root ZFS pool name. (Required.)

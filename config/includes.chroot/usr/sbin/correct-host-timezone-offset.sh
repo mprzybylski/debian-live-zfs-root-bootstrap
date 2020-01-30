@@ -11,6 +11,8 @@ offset in hours and minutes from UTC.
 "
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+LIB="$SCRIPT_DIR/../lib"
+
 SIGN=1
 
 # shellcheck disable=SC1090

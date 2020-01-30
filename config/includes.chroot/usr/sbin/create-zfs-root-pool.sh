@@ -1,8 +1,8 @@
 #!/bin/bash
 
-USAGE="Usage:
-create-root-zfs-pool.sh [-h][-nd] [-o property=value] ... [-O file-system-property=value]
-            ... [-m mountpoint] [-R root] [-t tname] pool vdev ...
+USAGE="Usage: create-root-zfs-pool.sh [-h][-nd] [-o property=value] ...
+    [-O file-system-property=value] ... [-m mountpoint] [-R root]
+    [-t tname] pool vdev ...
 Description:    Wrapper for 'zpool create -f' that enforces certain additional
     options that are useful for ZFS root pools. Must be run as root.  See
     script source and zpool(8) man page for more information."
