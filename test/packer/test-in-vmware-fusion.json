@@ -1,0 +1,52 @@
+{
+  "builders": [
+    {
+      "cpus": 3,
+      "memory": 8192, //megabytes
+      "type": "vmware-iso",
+      "disk_size": 1024, // megabytes, for ZFS boot pool
+      //FIXME: vvvv wrapper should plug in user's preferred disk size here
+      "disk_additional_size": [8192], //megabytes, for ZFS root pool
+      "disk_adapter_type": "scsi",
+      "disk_type_id": "0",
+      "cdrom_adapter_type": "sata",
+      "network": "nat",
+      "network_adapter_type": "vmxnet3",
+      "vmx_data": {
+        "ethernet1.connectionType": "custom",
+        "ethernet1.addressType": "generated",
+        "ethernet1.virtualDev": "vmxnet3",
+        "ethernet1.present": "TRUE",
+        "ethernet1.vnet": "vmnet2"
+      },
+      "iso_url": "file:///Users/mikeprz/live-image-amd64.hybrid.iso",
+      "iso_checksum": "4ed2ab8b9235e94f7f72aa75a5bf074beaffbb06cda2e13adcfdaaf7c3a2eb40",
+      "iso_checksum_type": "sha256",
+      "ssh_username": "root",
+      //FIXME: vvvv auto-generate in wrapper script and templatize here
+      "ssh_private_key_file": "/Users/mikeprz/.ssh/packer_temp",
+      "ssh_timeout": "24h",
+      "boot_wait": "10s",
+      "boot_command": [
+        "<enter><wait20s>",
+        "sudo -i<enter><wait>",
+        "correct-host-timezone-offset.sh -8:00 &&",
+        "build-zfs-kernel-modules.sh && ",
+        "modprobe zfs && ",
+        "create-zfs-boot-pool.sh test_bootpool /dev/sda && ",
+        "create-bios-boot-partition.sh /dev/sda && ",
+        "create-zfs-root-pool.sh test_rootpool /dev/sdb && ",
+        //FIXME: vvvv wrapper should plug in temp public key to -k argument
+        "bootstrap-zfs-debian-root.sh -n -k \"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIApjUSjLNA2d8JX7d5oe",
+        "Lr+Po7hY1r2MiuGAb17IEbT0 mikeprz@MIKEPRZ-M-56NF\" -B /dev/sda -r test_rootpool -b test_bootpool -i dhcp ",
+        "-R 'changeme' -i 192.168.70.254/24 ",
+        //"-m http://sjc-linux.cisco.com/debian/ ",
+        "&& shutdown -r now",
+        "<enter>"
+      ],
+      "shutdown_command": "shutdown -h now",
+      "keep_registered": true,
+      "skip_export": true
+    }
+  ]
+}

@@ -1,5 +1,5 @@
-Copyright 2016-2017, Michael Przybylski
-Copyright 2017, AppDynamics, Inc. and its affiliates
+Copyright 2016-2020, Michael Przybylski
+Copyright 2017-2020, AppDynamics, Inc. and its affiliates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

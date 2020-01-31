@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# ZFS packages must be installed late and separately because live build tries to configure them before
+# all of the ZFS pre-reqs are installed.
+set -e
+apt-get update
+# zfs-initramfs depends on all of the other ZFS-related packages we need.  They will get installed auto-magically.
+DEBIAN_FRONTEND=noninteractive apt-get --assume-yes install zfs-initramfs

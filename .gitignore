@@ -2,8 +2,8 @@
 
 .build
 /binary
+/chroot
 cache
-chroot
 *.files
 *.install
 *.live

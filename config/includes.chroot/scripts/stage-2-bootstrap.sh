@@ -1,16 +1,19 @@
 #!/bin/bash --login
 
+#FIXME: add a debug flag
 
-# TODO: add -I flag for IPv6 configuration
 USAGE="\
-Usage: stage-2-bootstrap.sh [options]
+Usage: stage-2-bootstrap.sh [options] -r <rootpool> -c </host/chroot/path>
 
 Makes a chroot setup with cdebootstrap bootable.
 
 Options:
+  -r <zfs root pool>        ZFS pool name hosting /. (Required.)
+  -c </host/chroot/path>    That path given as 'NEWROOT' when chroot was
+                            called. (Required.)
   -n                        Non-interactive mode.
-  -r <root password>        Root password for the bootstrapped system
-  -b <boot device>          Where the GRUB bootloader should be written.  This
+  -R <root password>        Root password for the bootstrapped system
+  -B <boot device>          Where the GRUB bootloader should be written.  This
                             flag may be used more than once to install to
                             redundant boot devices.
   -i <ipv4_addr/NN | dhcp>  IPv4 address / prefix length or 'dhcp' if the
@@ -27,39 +30,55 @@ BOOT_DEVICES=( )
 IPV4_ADDRESSES=( )
 BAD_INPUT=false
 
-while getopts ":nr:b:i:h" option; do
-    case $option in
-        n )
-            NON_INTERACTIVE=true
-        ;;
-        r )
-            ROOT_PASSWORD="$OPTARG"
-        ;;
-        b )
-            BOOT_DEVICES+=( "$OPTARG" )
-        ;;
-        i )
-            IPV4_ADDRESSES+=( "$OPTARG" )
-        ;;
-        h )
-            echo "$USAGE"
-            exit 0
-        ;;
-        * )
-            >&2 echo "'$OPTARG' is not a recognized option flag."
-            BAD_INPUT=true
-        ;;
-    esac
+root_auth_keys_file_present(){
+  local ROOT_AUTH_KEYS_FILE=/root/.ssh/authorized_keys
+  [ -f "$ROOT_AUTH_KEYS_FILE" ] && [[ $(ls -s /root/.ssh/authorized_keys | cut -d \  -f 1) != 0 ]]
+}
+
+while getopts ":nc:r:R:B:H:h" option; do
+  case $option in
+    c )
+      HOST_CHROOT_PATH="$OPTARG"
+    ;;
+    n )
+      NON_INTERACTIVE=true
+    ;;
+    R )
+      ROOT_PASSWORD="$OPTARG"
+    ;;
+    r )
+      ROOT_POOL="$OPTARG"
+    ;;
+    B )
+      BOOT_DEVICES+=( "$OPTARG" )
+    ;;
+    H )
+      HOSTNAME=$OPTARG
+    ;;
+    h )
+      echo "$USAGE"
+      exit 0
+    ;;
+    * )
+      >&2 echo "'$OPTARG' is not a recognized option flag."
+      BAD_INPUT=true
+    ;;
+  esac
 done
 
 shift $((OPTIND-1))
 
+if [ -z "$ROOT_POOL" ]; then
+  >&2 echo "The ZFS pool hosting / must be specified."
+  BAD_INPUT=true
+fi
+
 # Sanity check: require root password arg in non-interactive mode
-if $NON_INTERACTIVE &&  [ -z "$ROOT_PASSWORD" ] && [ -z "$ROOT_PUBLIC_KEY" ]; then
+if $NON_INTERACTIVE &&  [ -z "$ROOT_PASSWORD" ]; then
     >&2 echo "A root password or root ssh public key must be specified when running
 $0 non-interactively.
 "
-    BAD_INPUT=true
+  BAD_INPUT=true
 fi
 
 # Sanity check: grub config pre-seeding required in non-interactive mode
@@ -75,22 +94,15 @@ if $BAD_INPUT; then
     exit 1
 fi
 
-
-
 ln -s /proc/mounts /etc/mtab
-# FIXME: https://github.com/zfsonlinux/zfs/pull/7329 may to change the way /var/lib is mounted
-# See https://www.freedesktop.org/software/systemd/man/bootup.html and
-# the systemd.mount(5) man page for an explanation
-cat >> /etc/fstab <<VAR_LIB_MOUNT
-$(findmnt -no SOURCE / | cut -d / -f 1)/var/lib /var/lib zfs x-initrd.mount 0 0
-VAR_LIB_MOUNT
 
-# irqbalance gets automatically started by kernel installation and hangs onto file handles in /dev/  Stop it before
-# leaving chroot
-trap "service irqbalance stop" EXIT
+debconf-set-selections <<LOCALE_SETTINGS
+locales locales/locales_to_be_generated multiselect     en_US ISO-8859-1, en_US.ISO-8859-15 ISO-8859-15, en_US.UTF-8 UTF-8
+locales locales/default_environment_locale      select  en_US.UTF-8
+LOCALE_SETTINGS
 
 debconf-set-selections <<GRUB_BOOT_ZFS
-grub-pc	grub2/linux_cmdline	string	boot=zfs
+grub-pc	grub2/linux_cmdline	string root="ZFS=$ROOT_POOL/ROOT/debian"
 grub-pc	grub2/linux_cmdline_default	string
 GRUB_BOOT_ZFS
 
@@ -106,60 +118,82 @@ apt_get_errors=0
 
 # $1:       non_interactive: true | false
 # $2...:    package_1 package_2 ... package_n
-wrapt_get(){
+wrapt-get(){
     NON_INTERACTIVE_APT=$1
     shift
 
     if $NON_INTERACTIVE_APT; then
-        DEBIAN_FRONTEND=noninteractive apt-get --assume-yes install $@ || ((apt_get_errors++))
+        DEBIAN_FRONTEND=noninteractive apt-get --assume-yes install "$@" || ((apt_get_errors++))
     else
-        apt-get --assume-yes install $@ || ((apt_get_errors++))
+        apt-get --assume-yes install "$@" || ((apt_get_errors++))
     fi
 }
 
-apt-get update || ((apt_get_errors++))
+# setting mountpoint=legacy unmounts a ZFS filesystem.  Remount it based on its fstab entry
+mount /boot
 
-wrapt_get $NON_INTERACTIVE openssh-server
-wrapt_get $NON_INTERACTIVE linux-image-amd64 linux-headers-amd64 lsb-release build-essential gdisk dkms
-wrapt_get $NON_INTERACTIVE spl-dkms
+if ! apt-get update; then
+  >&2 echo "'apt-get update' exited with status code $?.  Dropping to a shell for troubleshooting..."
+  /bin/bash --login
+  exit 1
+fi
 
-wrapt_get $NON_INTERACTIVE zfs-dkms zfs-initramfs
-wrapt_get $NON_INTERACTIVE grub-pc
+# Make package installations dependent on their predecessors for easier troubleshooting
+wrapt-get $NON_INTERACTIVE locales && \
+wrapt-get $NON_INTERACTIVE openssh-server && \
+wrapt-get $NON_INTERACTIVE linux-image-amd64 linux-headers-amd64 lsb-release build-essential gdisk dkms && \
+wrapt-get $NON_INTERACTIVE zfs-initramfs && \
+wrapt-get $NON_INTERACTIVE grub-pc
 
 if [ $apt_get_errors -gt 0 ]; then
     >&2 echo "Failed to install one or more required, stage 2 packages."
     exit 1
 fi
 
-LOOPBACK_IF_NAME=lo
+HOSTNAME=$(lsb_release -si | awk '{print tolower($0)}')
 
-cat > /etc/network/interfaces.d/$LOOPBACK_IF_NAME <<LOOPBACK_CONFIG
-auto $LOOPBACK_IF_NAME
-iface $LOOPBACK_IF_NAME inet loopback
-LOOPBACK_CONFIG
+# set hostname.
+echo $HOSTNAME > /etc/hostname
+cat > /etc/hosts <<ETC_SLASH_HOSTS
+127.0.0.1     localhost
+127.0.1.1     $HOSTNAME
 
-# Get all non-loopback interface names
-NETWORK_INTERFACES=( `ip -o -a link | awk '$2 !~ /^lo:/{print substr($2, 1, length($2)-1)}'` )
 
-i=0
-while [[ $i -lt ${#NETWORK_INTERFACES[@]} ]]; do
-    if [[ -z "${IPV4_ADDRESSES[$i]}" ]] || [[ "${IPV4_ADDRESSES[$i]}" == "dhcp" ]]; then
-        cat > /etc/network/interfaces.d/${NETWORK_INTERFACES[$i]} <<DHCP_NETWORK_CONFIG
-auto ${NETWORK_INTERFACES[$i]}
-iface ${NETWORK_INTERFACES[$i]} inet dhcp
-DHCP_NETWORK_CONFIG
-    else
-        cat > /etc/network/interfaces.d/${NETWORK_INTERFACES[$i]} <<STATIC_NETWORK_CONFIG
-auto ${NETWORK_INTERFACES[$i]}
-iface ${NETWORK_INTERFACES[$i]} inet static
-    address ${IPV4_ADDRESSES[$i]}
-STATIC_NETWORK_CONFIG
-    fi
-    ((i++))
+# The following lines are desirable for IPv6 capable hosts
+::1     ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+ff02::3 ip6-allhosts
+ETC_SLASH_HOSTS
+
+ZED_RUNTIME=5
+ZFS_LIST_CACHEFILE="/etc/zfs/zfs-list.cache/$ROOT_POOL"
+# enable zfs-mount-generator(8)
+mkdir /etc/zfs/zfs-list.cache
+
+touch "$ZFS_LIST_CACHEFILE"
+ln -s /usr/lib/zfs-linux/zed.d/history_event-zfs-list-cacher.sh /etc/zfs/zed.d
+
+zed -F &
+ZED_PID=$!
+# wait for zed to write to $ZFS_LIST_CACHEFILE
+while [[ $(find "$ZFS_LIST_CACHEFILE" -printf '%s\n' ) -eq 0 ]]; do
+  sleep 1
 done
+kill -TERM $ZED_PID
+
+# yank the altroot prefix off of the zfs-list cachefile.
+sed -Ei "s|$HOST_CHROOT_PATH/?|/|" "$ZFS_LIST_CACHEFILE"
+
+# enable mounting of /boot at the correct time
+systemctl enable zfs-import-bootpool.service
 
 grub_errors=0
-for device in ${BOOT_DEVICES[@]}; do
+
+# FIXME: could this be bypassed by creative use of debconf-set-selections?
+for device in "${BOOT_DEVICES[@]}"; do
     if ! grub-install $device; then
         >&2 echo "'grub-install $device' failed."
         ((grub_errors++))
@@ -176,8 +210,7 @@ if ! update-grub; then
     exit 3
 fi
 
-
-if $NON_INTERACTIVE; then
+if [ -n "$ROOT_PASSWORD" ]; then
     if ! echo "root:$ROOT_PASSWORD" | chpasswd; then
         >&2 echo "Failed to set the root password with 'chpasswd'
 Exiting."

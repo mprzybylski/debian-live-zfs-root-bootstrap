@@ -1,9 +1,0 @@
-deb [arch=i386,amd64] http://ftp.us.debian.org/debian/ stretch main contrib
-deb-src http://ftp.us.debian.org/debian/ stretch main contrib
-
-deb [arch=i386,amd64] http://security.debian.org/debian-security stretch/updates main contrib
-deb-src http://security.debian.org/debian-security stretch/updates main contrib
-
-# stretch-updates, previously known as 'volatile'
-deb [arch=i386,amd64] http://ftp.us.debian.org/debian/ stretch-updates main contrib
-deb-src http://ftp.us.debian.org/debian/ stretch-updates main contrib

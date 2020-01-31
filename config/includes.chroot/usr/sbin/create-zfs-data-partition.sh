@@ -1,7 +1,7 @@
 #!/bin/bash
 
 USAGE="
-Usage: create-zfs-data-partition.sh </dev/block_device> [size] [partition_number]
+Usage: create-zfs-data-partition.sh </dev/block_device> [size [partition_number]]
 
 Creates a ZFS data partition of the specified size, on the specified block
 device, at the specified partition number.
@@ -20,7 +20,10 @@ if [ "$1" == '-h' ] || [ "$1" == '--help' ]; then
     exit 1
 fi
 
-source /sbin/partition_functions.sh
+# include common functions
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+LIB="$SCRIPT_DIR/../lib"
+source "$LIB/bootstrap-zfs-root/partition_functions.sh"
 
 if [ -n "$1" ] && is_block_device "$1" && ! is_partition "$1"; then
     if [ -n "$2" ]; then
@@ -39,7 +42,7 @@ if [ -n "$1" ] && is_block_device "$1" && ! is_partition "$1"; then
         if [[ "$3" =~ ^[0-9]+$ ]]; then
                 PARTNUM=$3
             else
-                >&2 echo "Error: Integer partition number expected after $1"
+                >&2 echo "Error: Integer partition number expected after $3"
                 >&2 echo "$USAGE"
                 exit 1
             fi
