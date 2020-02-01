@@ -37,7 +37,7 @@ If you are interested in forking or contributing to this project, please conside
 ## A note on ZFS and disk partitions
 In general, it is simpler to let `zpool` partition and use an entire block device.  However, that is frequently unfeasible in computers that only accept a limited number of storage devices, (especially laptops), and/or where one must also carve out an EFI boot partition.
 
-ZFS does allow an administrator to create a pool from a partition, rather than a whole disk, with the following caveats:
+ZFS does allow an administrator to use partitions rather than whole disks in a ZFS pool, with the following caveats:
 * The partition table type must be GPT
 * The disk where the ZFS vdev partition resides must include a partition number 9. (Typically, this is located at the end of the disk.)
 * Partition 9 must have type code BF07
@@ -46,8 +46,6 @@ ZFS does allow an administrator to create a pool from a partition, rather than a
 `create-zfs-efi-partition.sh` will create a partition 9 at the end of the block device given as its argument that meets the above requirements.
 
 `create-zfs-data-partition.sh` can be used to create one or more ZFS data partitions with the correct type codes.
-
-`build-zfs-kernel-modules.sh` 
 
 ## Scripts included with the live image:
 
