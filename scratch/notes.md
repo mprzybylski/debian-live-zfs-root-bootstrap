@@ -86,3 +86,6 @@ See-also `debconf-set-selections`
 Troubleshooting
 `/bin/plymouth could not be executed and failed.` is a red herring.  It really has to do with a broken fstab entry.
 mountpoint=legacy wasn't set for the /boot filesystem which has a dedicated line in /etc/fstab
+
+# Detecting hidpi and selecting a bigger font?
+`cat /sys/class/graphics/fb0/modes` (find the biggest one, and decide if it's big enough to `setfont setfont Uni3-Terminus32x16`)
