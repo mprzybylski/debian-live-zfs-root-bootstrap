@@ -12,3 +12,5 @@ INCLUDED_SBIN_SCRIPTS="bootstrap-zfs-debian-root.sh
 for script in $INCLUDED_SBIN_SCRIPTS; do
     chmod 744 /usr/sbin/$script
 done
+
+chmod 755 /sbin/detect-setup-hidpi.sh

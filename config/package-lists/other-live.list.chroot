@@ -19,3 +19,4 @@ kbd
 iwd
 pciutils
 firmware-iwlwifi
+gawk
