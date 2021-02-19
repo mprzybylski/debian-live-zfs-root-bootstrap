@@ -17,5 +17,5 @@ vim-tiny
 man-db
 kbd
 iwd
-lspci
+pciutils
 firmware-iwlwifi
