@@ -15,3 +15,5 @@ sudo
 user-setup
 vim-tiny
 man-db
+kbd
+iwd

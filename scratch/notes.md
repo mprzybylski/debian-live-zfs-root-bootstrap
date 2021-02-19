@@ -88,4 +88,5 @@ Troubleshooting
 mountpoint=legacy wasn't set for the /boot filesystem which has a dedicated line in /etc/fstab
 
 # Detecting hidpi and selecting a bigger font?
-`cat /sys/class/graphics/fb0/modes` (find the biggest one, and decide if it's big enough to `setfont setfont Uni3-Terminus32x16`)
+* `cat /sys/class/graphics/fb0/modes` (find the biggest one, and decide if it's big enough to `setfont Uni3-Terminus32x16`)
+  * Thinky-Winks: U:3840-2160p-0
