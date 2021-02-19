@@ -1,2 +1,3 @@
 #!/bin/bash
 systemctl enable systemd-resolved
+ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
