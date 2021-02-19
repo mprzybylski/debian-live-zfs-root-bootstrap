@@ -12,5 +12,4 @@ for device_name in `zpool list -H -v $POOL | awk '\
     grub-install /dev/$device_name
 done
 
-
 update-grub

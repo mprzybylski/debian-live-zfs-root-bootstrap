@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # TODO: add -I flag for IPv6 configuration
-# TODO: streamline grub legacy bios and efi setup
 # FIXME: add a debug flag
 
 USAGE="\
@@ -14,24 +13,37 @@ bootstrapped system.
 
 Options:
   -r <zfs pool name>        Root ZFS pool name. (Required.)
+
   -b <zfs boot pool>        ZFS pool name hosting /boot. (Required.)
+
   -H <hostname>             Hostname to use for the bootstrapped machine.
                             (Defaults to the lsb_release Distributor ID.)
+
   -m <URL>                  Debian mirror URL.  (Defaults to
                             http://ftp.us.debian.org/debian/ )
+
   -n                        Non-interactive mode.
+
   -R <root password>        Root password for the bootstrapped system
+
   -k <root ssh public key>  Public key to append to /root/.ssh/authorized_keys
                             on the bootstrapped system.
+
   -B <boot device>          Block device or partition where the GRUB bootloader
                             should be written.  This flag may be used more than
                             once to install to redundant boot devices.
+
+  -g                        Setup legacy grub bios bootloader.
+
+  -e                        Setup efi grub bootloader.
+
   -i <ipv4_addr/NN | dhcp>  IPv4 address / prefix length or 'dhcp' if the
                             host's network interface should be automatically
                             configured.  Can be specified multiple times for
                             multiple network interfaces.  Address settings will
                             be applied to non-loopback interfaces in the order
                             they appear in the output of 'ip -o -a link'.
+
   -h | --help               Print this usage information and exit.
 "
 
@@ -58,17 +70,25 @@ NON_INTERACTIVE=false
 ROOT_PASSWORD=""
 ROOT_PUBLIC_KEY=""
 BOOT_DEVICES=( )
+LEGACY_GRUB_BOOT=false
+EFI_GRUB_BOOT=false
 IPV4_ADDRESSES=( )
 BAD_INPUT=false
 
 LOOPBACK_IF_NAME=lo
 IMPORT_BOOTPOOL_UNIT_NAME=zfs-import-bootpool.service
 
-args="$(getopt -o "nr:R:k:b:B:i:H:m:h" -l "help" -- "$@")"
+args="$(getopt -o "negr:R:k:b:B:i:H:m:h" -l "help" -- "$@")"
 eval set -- "$args"
 
 while true; do
     case $1 in
+      -e )
+        EFI_GRUB_BOOT=true
+      ;;
+      -g )
+        LEGACY_GRUB_BOOT=true
+      ;;
       -r )
         if [[ "$2" =~ ^- ]]; then
           >&2 echo "Error: Argument expected for '$1' flag"
@@ -82,7 +102,7 @@ while true; do
           fi
           shift
         fi
-        ;;
+      ;;
       -b )
         if [[ "$2" =~ ^- ]]; then
             >&2 echo "Error: Argument expected for '$1' flag"
@@ -189,6 +209,18 @@ while true; do
     shift
 done
 
+if $LEGACY_GRUB_BOOT && $EFI_GRUB_BOOT; then
+  >&2 echo "ERROR: Legacy grub boot and EFI grub boot flags, (-e and -g) are mutually
+exclusive."
+  BAD_INPUT=true
+fi
+
+if ! $LEGACY_GRUB_BOOT && ! $EFI_GRUB_BOOT; then
+  >&2 echo "ERROR: Please specify -e for EFI bootloader installation or -g for legacy grub
+BIOS bootloader installation."
+  BAD_INPUT=true
+fi
+
 if [ -z "$ROOT_POOL" ]; then
     >&2 echo "Root pool not specified.  Unable to proceed."
     BAD_INPUT=true
@@ -221,6 +253,8 @@ fi
 
 gen_stage2_command(){
   echo -n "chroot ${TARGET_DIRNAME} /root/$STAGE2_BOOTSTRAP -r $ROOT_POOL -c $TARGET_DIRNAME"
+  $LEGACY_GRUB_BOOT && echo -n " -g"
+  $EFI_GRUB_BOOT && echo -n " -e"
   $NON_INTERACTIVE && echo -n " -n"
   [ -n "$ROOT_PASSWORD" ] && echo -n " -R $ROOT_PASSWORD"
 

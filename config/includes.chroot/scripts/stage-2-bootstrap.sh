@@ -1,21 +1,32 @@
 #!/bin/bash --login
 
 #FIXME: add a debug flag
-
+#FIXME: add mutually exclusive BIOS and EFI boot flags
 USAGE="\
-Usage: stage-2-bootstrap.sh [options] -r <rootpool> -c </host/chroot/path>
+Usage:
+stage-2-bootstrap.sh [options] -e -r <rootpool> -c </host/chroot/path>
+stage-2-bootstrap.sh [options] -g -r <rootpool> -c </host/chroot/path>
 
 Makes a chroot setup with cdebootstrap bootable.
 
 Options:
   -r <zfs root pool>        ZFS pool name hosting /. (Required.)
+
   -c </host/chroot/path>    That path given as 'NEWROOT' when chroot was
                             called. (Required.)
+
   -n                        Non-interactive mode.
+
   -R <root password>        Root password for the bootstrapped system
+
   -B <boot device>          Where the GRUB bootloader should be written.  This
                             flag may be used more than once to install to
                             redundant boot devices.
+
+  -g                        Setup legacy grub bios bootloader.
+
+  -e                        Setup efi grub bootloader.
+
   -i <ipv4_addr/NN | dhcp>  IPv4 address / prefix length or 'dhcp' if the
                             host's network interface should be automatically
                             configured.  Can be specified multiple times for
@@ -27,7 +38,11 @@ Options:
 NON_INTERACTIVE=false
 ROOT_PASSWORD=""
 BOOT_DEVICES=( )
+BOOT_DEV_REGEX='/^(.*\/[hs]d[a-z]+)([0-9]+)$|^(.*\/nvme[0-9]+n[0-9]+)p([0-9]+)$|^(.*)-part([0-9]+)$/'
 IPV4_ADDRESSES=( )
+LEGACY_GRUB_BOOT=false
+EFI_GRUB_BOOT=false
+EFI_SYSTEM_PARTITION_MOUNTPOINT=/boot/efi
 BAD_INPUT=false
 
 root_auth_keys_file_present(){
@@ -35,10 +50,16 @@ root_auth_keys_file_present(){
   [ -f "$ROOT_AUTH_KEYS_FILE" ] && [[ $(ls -s /root/.ssh/authorized_keys | cut -d \  -f 1) != 0 ]]
 }
 
-while getopts ":nc:r:R:B:H:h" option; do
+while getopts ":nc:egr:R:B:H:h" option; do
   case $option in
     c )
       HOST_CHROOT_PATH="$OPTARG"
+    ;;
+    e )
+      EFI_GRUB_BOOT=true
+    ;;
+    g )
+      LEGACY_GRUB_BOOT=true
     ;;
     n )
       NON_INTERACTIVE=true
@@ -68,14 +89,26 @@ done
 
 shift $((OPTIND-1))
 
+if $LEGACY_GRUB_BOOT && $EFI_GRUB_BOOT; then
+  >&2 echo "ERROR: Legacy grub boot and EFI grub boot flags, (-e and -g) are mutually
+exclusive."
+  BAD_INPUT=true
+fi
+
+if ! $LEGACY_GRUB_BOOT && ! $EFI_GRUB_BOOT; then
+  >&2 echo "ERROR: Please specify -e for EFI bootloader installation or -g for legacy grub
+BIOS bootloader installation."
+  BAD_INPUT=true
+fi
+
 if [ -z "$ROOT_POOL" ]; then
-  >&2 echo "The ZFS pool hosting / must be specified."
+  >&2 echo "ERROR: The ZFS pool hosting the / (root) filesystem must be specified."
   BAD_INPUT=true
 fi
 
 # Sanity check: require root password arg in non-interactive mode
 if $NON_INTERACTIVE &&  [ -z "$ROOT_PASSWORD" ]; then
-    >&2 echo "A root password or root ssh public key must be specified when running
+    >&2 echo "ERROR: A root password or root ssh public key must be specified when running
 $0 non-interactively.
 "
   BAD_INPUT=true
@@ -83,7 +116,7 @@ fi
 
 # Sanity check: grub config pre-seeding required in non-interactive mode
 if $NON_INTERACTIVE && [ ${#BOOT_DEVICES[@]} -eq 0 ]; then
-    >&2 echo "At least one boot device must be specified when running $0
+    >&2 echo "ERROR: At least one boot device must be specified when running $0
 non-interactively
 "
     BAD_INPUT=true
@@ -101,10 +134,23 @@ locales locales/locales_to_be_generated multiselect     en_US ISO-8859-1, en_US.
 locales locales/default_environment_locale      select  en_US.UTF-8
 LOCALE_SETTINGS
 
-debconf-set-selections <<GRUB_BOOT_ZFS
+if $LEGACY_GRUB_BOOT; then
+  debconf-set-selections <<GRUB_BOOT_ZFS
 grub-pc	grub2/linux_cmdline	string root="ZFS=$ROOT_POOL/ROOT/debian"
 grub-pc	grub2/linux_cmdline_default	string
 GRUB_BOOT_ZFS
+fi
+
+if $EFI_GRUB_BOOT; then
+  debconf-set-selections <<GRUB_BOOT_ZFS
+grub-efi-amd64  grub2/kfreebsd_cmdline  string
+grub-efi-amd64  grub2/linux_cmdline_default     string
+grub-efi-amd64  grub2/update_nvram      boolean true
+grub-efi-amd64  grub2/kfreebsd_cmdline_default  string  quiet
+grub-efi-amd64  grub2/force_efi_extra_removable boolean false
+grub-efi-amd64  grub2/linux_cmdline     string root="ZFS=$ROOT_POOL/ROOT/debian"
+GRUB_BOOT_ZFS
+fi
 
 if $NON_INTERACTIVE; then
     debconf-set-selections <<NON_INTERACTIVE_DEBCONF_SELECTIONS
@@ -142,8 +188,12 @@ fi
 wrapt-get $NON_INTERACTIVE locales && \
 wrapt-get $NON_INTERACTIVE openssh-server && \
 wrapt-get $NON_INTERACTIVE linux-image-amd64 linux-headers-amd64 lsb-release build-essential gdisk dkms && \
-wrapt-get $NON_INTERACTIVE zfs-initramfs && \
-wrapt-get $NON_INTERACTIVE grub-pc
+wrapt-get $NON_INTERACTIVE gawk && \
+wrapt-get $NON_INTERACTIVE zfs-initramfs
+
+if $LEGACY_GRUB_BOOT; then
+  wrapt-get $NON_INTERACTIVE grub-pc
+fi
 
 if [ $apt_get_errors -gt 0 ]; then
     >&2 echo "Failed to install one or more required, stage 2 packages."
@@ -168,7 +218,7 @@ ff02::2 ip6-allrouters
 ff02::3 ip6-allhosts
 ETC_SLASH_HOSTS
 
-ZED_RUNTIME=5
+ZED_RUN_TIME=5
 ZFS_LIST_CACHEFILE="/etc/zfs/zfs-list.cache/$ROOT_POOL"
 # enable zfs-mount-generator(8)
 mkdir /etc/zfs/zfs-list.cache
@@ -192,13 +242,46 @@ systemctl enable zfs-import-bootpool.service
 
 grub_errors=0
 
-# FIXME: could this be bypassed by creative use of debconf-set-selections?
-for device in "${BOOT_DEVICES[@]}"; do
-    if ! grub-install $device; then
-        >&2 echo "'grub-install $device' failed."
-        ((grub_errors++))
-    fi
-done
+
+if $EFI_GRUB_BOOT; then
+  wrapt-get $NON_INTERACTIVE dosfstools
+  mkdosfs -F 32 -s 1 -n EFI "${BOOT_DEVICES[0]}"
+  mkdir "$EFI_SYSTEM_PARTITION_MOUNTPOINT"
+  # add to fstab
+  echo /dev/disk/by-uuid/"$(blkid -s UUID -o value "${BOOT_DEVICES[0]}")" \
+    "$EFI_SYSTEM_PARTITION_MOUNTPOINT" vfat \
+    x-systemd.idle-timeout=1min,x-systemd.automount,noauto \
+    0 1 >> /etc/fstab
+  mount "$EFI_SYSTEM_PARTITION_MOUNTPOINT"
+  wrapt-get $NON_INTERACTIVE grub-efi-amd64 shim-signed
+  grub-install --target=x86_64-efi --efi-directory="$EFI_SYSTEM_PARTITION_MOUNTPOINT" \
+    --bootloader-id=debian --recheck --no-floppy || ((grub_errors++))
+  # Setup EFI boot partition on any redundant boot devices.
+  # FIXME: remove after debugging complete
+  set -x
+  umount "$EFI_SYSTEM_PARTITION_MOUNTPOINT"
+  i=1
+  while [ $i -lt ${#BOOT_DEVICES[@]} ]; do
+    dd if="${BOOT_DEVICES[0]}" of="${BOOT_DEVICES[$i]}"
+      eval "$(awk 'match($0, '"$BOOT_DEV_REGEX"', a){print "dev_path="a[1]a[3]a[5]";part_num="a[2]a[4]a[6] }' <<<"${BOOT_DEVICES[$i]}")"
+    efibootmgr -c -g -d "$dev_path" -p "$part_num" -L "debian-$((i+1))" -l '\EFI\debian\grubx64.efi' \
+      || ((grub_errors++))
+    (( i++ ))
+  done
+  mount "$EFI_SYSTEM_PARTITION_MOUNTPOINT"
+  # FIXME: remove after debugging complete
+  set +x
+fi
+
+if $LEGACY_GRUB_BOOT; then
+  # TODO: could this be bypassed for the BIOS case by creative use of debconf-set-selections?
+  for device in "${BOOT_DEVICES[@]}"; do
+      if ! grub-install $device; then
+          >&2 echo "'grub-install $device' failed."
+          ((grub_errors++))
+      fi
+  done
+fi
 
 if [ $grub_errors -gt 0 ]; then
     >&2 echo "Exiting."

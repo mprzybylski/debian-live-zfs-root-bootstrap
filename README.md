@@ -1,11 +1,13 @@
 # TODO:
+* Add EFI boot support
+* Add automatic hidpi console detection and support
 * Set up CI build and packer-based end-to-end test.
-* Add EFI boot support.
+* Add native encryption support.
 * Streamline bootloader setup.
 * Allow non-interactive installation with root SSH public key and no root password?
 
 # Background
-This project provides Debian-based live image that is pre-customized for installing a minimal, Debian-based linux distribution to a ZFS root filesystem and making it bootable.  The scripts it includes are based on [https://github.com/zfsonlinux/zfs/wiki/Debian-Buster-Root-on-ZFS](https://github.com/zfsonlinux/zfs/wiki/Debian-Buster-Root-on-ZFS), and are intended to streamline the procedure as well as making it more repeatable.
+This project provides Debian-based live image that is pre-customized for installing a minimal, Debian-based linux distribution to a ZFS root filesystem and making it bootable.  The scripts it includes are based on [https://openzfs.github.io/openzfs-docs/Getting%20Started/Debian/Debian%20Buster%20Root%20on%20ZFS.html](https://openzfs.github.io/openzfs-docs/Getting%20Started/Debian/Debian%20Buster%20Root%20on%20ZFS.html), and are intended to streamline the procedure as well as making it more repeatable.
 
 It can be run interactively, or non-interactively with tools like Packer.
 
@@ -69,6 +71,17 @@ Builds the live system's ZFS kernel modules with DKMS.  *(This step is required 
 Usage: create-bios-boot-partition.sh </dev/block_device>
 
 Creates a bios boot partition for the GRUB bootloader on the specified block
+device.
+
+Options:
+    -h | --help     Print this help message and exit"
+```
+
+### `create-boot-efi-partition.sh`
+```
+Usage: create-boot-efi-partition.sh </dev/block_device>
+
+Creates a UEFI boot partition for the GRUB bootloader on the specified block
 device.
 
 Options:
