@@ -1,2 +1,2 @@
 #!/bin/bash
-systemctl enable --now systemd-resolved
+systemctl enable systemd-resolved
