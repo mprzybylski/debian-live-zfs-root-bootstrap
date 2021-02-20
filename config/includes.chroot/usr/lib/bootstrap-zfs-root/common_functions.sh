@@ -28,6 +28,7 @@ is_valid_zpool_name_without_spaces(){
   [[ "$1" =~ ^[A-Za-z][-_:.A-Za-z0-9]* ]]
 }
 
+# shellcheck disable=SC2034
 ZPOOL_NAME_ERROR_MSG_PART2="As noted in the zpool(8) man page, \"The pool name must begin with a letter, and
 can only contain alphanumeric characters as well as underscore ('_'), dash
 ('-'), colon (':'), ...and period ('.').\""

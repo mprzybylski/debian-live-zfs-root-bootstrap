@@ -1,6 +1,7 @@
 # TODO:
 * Remove graphical modes from boot menu
 * Complete automatic hidpi console detection and support
+  * change `FONTSIZE` to `"32x16"` in `/etc/default/console-setup` before `getty-static.service`?
 * Set up CI build and packer-based end-to-end test.
 * Add native ZFS encryption support.
 * Streamline bootloader setup?

@@ -240,8 +240,15 @@ sed -Ei "s|$HOST_CHROOT_PATH/?|/|" "$ZFS_LIST_CACHEFILE"
 # enable mounting of /boot at the correct time
 systemctl enable zfs-import-bootpool.service
 
-grub_errors=0
+grub-probe /boot
+update-initramfs -c -k all
 
+if ! update-grub; then
+    >&2 echo "'update-grub' failed.  Your system is probably not bootable."
+    exit 3
+fi
+
+grub_errors=0
 
 if $EFI_GRUB_BOOT; then
   wrapt-get $NON_INTERACTIVE dosfstools efivar
@@ -289,10 +296,6 @@ if [ $grub_errors -gt 0 ]; then
     exit 2
 fi
 
-if ! update-grub; then
-    >&2 echo "'update-grub' failed.  Your system is probably not bootable."
-    exit 3
-fi
 
 if [ -n "$ROOT_PASSWORD" ]; then
     if ! echo "root:$ROOT_PASSWORD" | chpasswd; then

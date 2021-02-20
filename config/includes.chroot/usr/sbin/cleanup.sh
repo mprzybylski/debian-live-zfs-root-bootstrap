@@ -28,6 +28,7 @@ umount "$TARGET_DIRNAME/dev"
 umount "$TARGET_DIRNAME/proc"
 umount "$TARGET_DIRNAME/sys/fs/fuse/connections"
 umount "$TARGET_DIRNAME/sys"
+umount "$TARGET_DIRNAME/boot/efi"
 
 set -e #Exit with an error immediately if any of the zpool exports fail
 for pool in "$@"; do

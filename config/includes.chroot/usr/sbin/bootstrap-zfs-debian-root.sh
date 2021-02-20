@@ -100,20 +100,28 @@ while true; do
             >&2 echo "Error: invalid argument to the '$1' flag"
             >&2 echo "$ZPOOL_NAME_ERROR_MSG_PART2"
           fi
+          # check for existence of the pool!
+          if ! zfs list "$2" >/dev/null 2>&1; then
+            >&2 echo "ERROR: ZFS pool '$2' does not exist.  Is there a typo in the pool name?"
+          fi
           shift
         fi
       ;;
       -b )
         if [[ "$2" =~ ^- ]]; then
-            >&2 echo "Error: Argument expected for '$1' flag"
-            BAD_INPUT=true
-          else
-            if is_valid_zpool_name_without_spaces "$2"; then
-              BOOT_POOL="$2"
-              BOOT_FS_NAME="$BOOT_POOL/BOOT/debian"
-           else
-            >&2 echo "Error: invalid argument to the '$1' flag"
-            >&2 echo "$ZPOOL_NAME_ERROR_MSG_PART2"
+          >&2 echo "Error: Argument expected for '$1' flag"
+          BAD_INPUT=true
+        else
+          if is_valid_zpool_name_without_spaces "$2"; then
+            BOOT_POOL="$2"
+            BOOT_FS_NAME="$BOOT_POOL/BOOT/debian"
+         else
+          >&2 echo "Error: invalid argument to the '$1' flag"
+          >&2 echo "$ZPOOL_NAME_ERROR_MSG_PART2"
+          fi
+          # check for existence of the pool!
+          if ! zfs list "$2" >/dev/null 2>&1; then
+            >&2 echo "ERROR: ZFS pool '$2' does not exist.  Is there a typo in the pool name?"
           fi
           shift
         fi
