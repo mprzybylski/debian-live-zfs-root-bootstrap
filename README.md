@@ -38,6 +38,7 @@ If you are interested in forking or contributing to this project, please conside
 
 ## Booting
 (don't use graphical modes)
+(if you want to install the EFI bootloader, you need to boot the system in EFI mode, (i.e. disable bios compatibility boot mode in the system's bios menu))
 
 ## Working with hi-dpi monitors
 Run `/sbin/detect-setup-hidpi.sh` to change console font to one that can be read without squinting at a hi-dpi screen.  (TODO: make calling this a systemd unit file in the live image)

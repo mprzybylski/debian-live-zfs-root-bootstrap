@@ -2,7 +2,6 @@
 
 INCLUDED_SBIN_SCRIPTS="bootstrap-zfs-debian-root.sh
     correct-host-timezone-offset.sh
-    configure-root-pool.sh
     create-boot-efi-partition.sh
     create-bios-boot-partition.sh
     create-zfs-data-partition.sh
