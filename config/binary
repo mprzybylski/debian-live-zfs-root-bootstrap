@@ -22,7 +22,7 @@ LB_BOOTAPPEND_LIVE_FAILSAFE="boot=live components memtest noapic noapm nodma nom
 
 # $LB_BOOTLOADERS: set bootloaders
 # (Default: syslinux,grub-efi)
-LB_BOOTLOADERS="syslinux,grub-efi"
+LB_BOOTLOADERS="grub-efi"
 
 # $LB_CHECKSUMS: set checksums
 # (Default: md5)
@@ -167,4 +167,4 @@ LB_SWAP_FILE_SIZE="512"
 
 # $LB_UEFI_SECURE_BOOT: enable/disable UEFI secure boot
 # (Default: auto)
-LB_UEFI_SECURE_BOOT="auto"
+LB_UEFI_SECURE_BOOT="enable"

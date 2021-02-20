@@ -244,9 +244,9 @@ grub_errors=0
 
 
 if $EFI_GRUB_BOOT; then
-  wrapt-get $NON_INTERACTIVE dosfstools
+  wrapt-get $NON_INTERACTIVE dosfstools efivars
   mkdosfs -F 32 -s 1 -n EFI "${BOOT_DEVICES[0]}"
-  mkdir "$EFI_SYSTEM_PARTITION_MOUNTPOINT"
+  mkdir -p "$EFI_SYSTEM_PARTITION_MOUNTPOINT"
   # add to fstab
   echo /dev/disk/by-uuid/"$(blkid -s UUID -o value "${BOOT_DEVICES[0]}")" \
     "$EFI_SYSTEM_PARTITION_MOUNTPOINT" vfat \
@@ -264,6 +264,7 @@ if $EFI_GRUB_BOOT; then
   while [ $i -lt ${#BOOT_DEVICES[@]} ]; do
     dd if="${BOOT_DEVICES[0]}" of="${BOOT_DEVICES[$i]}"
       eval "$(awk 'match($0, '"$BOOT_DEV_REGEX"', a){print "dev_path="a[1]a[3]a[5]";part_num="a[2]a[4]a[6] }' <<<"${BOOT_DEVICES[$i]}")"
+    # shellcheck disable=SC2154
     efibootmgr -c -g -d "$dev_path" -p "$part_num" -L "debian-$((i+1))" -l '\EFI\debian\grubx64.efi' \
       || ((grub_errors++))
     (( i++ ))

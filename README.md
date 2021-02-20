@@ -1,9 +1,9 @@
 # TODO:
-* Add EFI boot support
-* Add automatic hidpi console detection and support
+* Remove graphical modes from boot menu
+* Complete automatic hidpi console detection and support
 * Set up CI build and packer-based end-to-end test.
-* Add native encryption support.
-* Streamline bootloader setup.
+* Add native ZFS encryption support.
+* Streamline bootloader setup?
 * Allow non-interactive installation with root SSH public key and no root password?
 
 # Background
@@ -36,6 +36,24 @@ If you are interested in forking or contributing to this project, please conside
 
 # Usage
 
+## Booting
+(don't use graphical modes)
+
+## Working with hi-dpi monitors
+Run `/sbin/detect-setup-hidpi.sh` to change console font to one that can be read without squinting at a hi-dpi screen.  (TODO: make calling this a systemd unit file in the live image)
+
+## WiFi setup (Optional, but useful on laptops)
+(TODO: update these instructions when this image ships with `iwd` 0.19 or later, which doesn't need a separate DHCP client.)
+* Become root with `sudo -i`
+* Run `ifconfig -a` to get the name of the machine's wireless card, i.e. `wlp4s0`
+* Run `iwctl` (This starts an interactive shell for configuring WiFi settings, and the prompt will change to `[iwd]#`)
+  * Type `help` for a complete list of `iwctl` commands
+  * Type `station wlp4s0 scan` to start the card scanning for available networks if you don't already know what SSID you want to connect to, or if it can be reached.
+  * Type `station wlp4s0 get-networks` to list the results of the scan operation.
+  * Type `station wlp4s0 connect "My WiFi SSID"` to connect to your preferred wireless network
+  * Type `exit` to exit `iwctl`
+* Run `dhclient wlp4s0` to configure an IP address, name server, default route, etc.
+
 ## A note on ZFS and disk partitions
 In general, it is simpler to let `zpool` partition and use an entire block device.  However, that is frequently unfeasible in computers that only accept a limited number of storage devices, (especially laptops), and/or where one must also carve out an EFI boot partition.
 
@@ -48,6 +66,8 @@ ZFS does allow an administrator to use partitions rather than whole disks in a Z
 `create-zfs-efi-partition.sh` will create a partition 9 at the end of the block device given as its argument that meets the above requirements.
 
 `create-zfs-data-partition.sh` can be used to create one or more ZFS data partitions with the correct type codes.
+
+Please note that grub lags behind ZFS in terms of what features it supports.  As such, ***`/boot` must be hosted in a ZFS pool where features not supported by `grub` are disabled.***  The [OpenZFS project recommends 1GB for the `/boot` pool.](https://openzfs.github.io/openzfs-docs/Getting%20Started/Debian/Debian%20Buster%20Root%20on%20ZFS.html)
 
 ## Scripts included with the live image:
 
