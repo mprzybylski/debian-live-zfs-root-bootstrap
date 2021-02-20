@@ -244,7 +244,7 @@ grub_errors=0
 
 
 if $EFI_GRUB_BOOT; then
-  wrapt-get $NON_INTERACTIVE dosfstools efivars
+  wrapt-get $NON_INTERACTIVE dosfstools efivar
   mkdosfs -F 32 -s 1 -n EFI "${BOOT_DEVICES[0]}"
   mkdir -p "$EFI_SYSTEM_PARTITION_MOUNTPOINT"
   # add to fstab
