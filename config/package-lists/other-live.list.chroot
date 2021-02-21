@@ -11,6 +11,7 @@ nano
 net-tools
 openssh-client
 parted
+screen
 sudo
 user-setup
 vim-tiny

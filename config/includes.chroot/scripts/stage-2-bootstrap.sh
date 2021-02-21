@@ -306,16 +306,18 @@ ZED_PID=$!
 # wait for zed to write to $ZFS_LIST_ROOT_CACHEFILE
 echo "Waiting for zed to populate $ZFS_LIST_ROOT_CACHEFILE"
 keep_waiting=true
+set -x
 while $keep_waiting; do
   keep_waiting=false
   for pool in "${ZFS_POOLS[@]}"; do
-    if [[ $(find "/etc/zfs/zfs-list.cache/$pool" -printf '%s\n' ) -eq 0 ]]; then
+    if [[ $(find "/etc/zfs/zfs-list.cache/$pool" -printf '%s' ) -eq 0 ]]; then
       keep_waiting=true
     fi
   done
   sleep 1
 done
 kill -TERM $ZED_PID
+set +x
 
 # yank the altroot prefix off of the zfs-list cachefile.
 sed -Ei "s|$HOST_CHROOT_PATH/?|/|" "/etc/zfs/zfs-list.cache/*"

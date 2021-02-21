@@ -306,6 +306,7 @@ fi
 
 i=0
 
+set -x
 zpool export -a
 
 zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=none "$ROOT_POOL"
@@ -316,7 +317,7 @@ zfs create -o canmount=off -o mountpoint=none "$BOOT_POOL/BOOT"
 
 zfs create -o canmount=noauto -o mountpoint=/ "$ROOT_POOL/ROOT/debian"
 zfs mount "$ROOT_POOL/ROOT/debian"
-set -x
+
 zfs create -o canmount=noauto -o mountpoint=/boot "$BOOT_FS_NAME"
 zfs mount "$BOOT_FS_NAME"
 set +x
@@ -359,6 +360,10 @@ mkdir "${TARGET_DIRNAME}/proc"
 
 mkdir "${TARGET_DIRNAME}/sys"
 mount -o bind /sys "${TARGET_DIRNAME}/sys"
+
+# FIXME: debugging code to be removed later
+echo "dropping to a shell to verify that everything is mounted where it should be"
+/bin/bash --login
 
 if ! cdebootstrap $DEBIAN_SUITE "${TARGET_DIRNAME}" "${DEBIAN_MIRROR}"; then
     >&2 echo "Failed to setup root filesystem in $ROOTFS"
