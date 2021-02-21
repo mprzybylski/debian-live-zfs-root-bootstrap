@@ -51,9 +51,12 @@ Options:
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 CLEANUP_SCRIPT="$SCRIPT_DIR/cleanup.sh"
-ETC="$SCRIPT_DIR/../../etc"
+CONFDIR="$SCRIPT_DIR/../../etc/bootstrap-zfs-debian-root"
 LIB="$SCRIPT_DIR/../lib"
+mkdir -p "$CONFDIR"
+echo "TARGET_DIRNAME='$(mktemp -d)'" >> "$CONFDIR/conf.sh"
 
+source "$CONFDIR/conf.sh"
 # shellcheck disable=SC1090
 source "$LIB/bootstrap-zfs-root/common_functions.sh"
 # shellcheck disable=SC1090

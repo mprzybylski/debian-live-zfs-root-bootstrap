@@ -14,10 +14,10 @@ fi
 
 # Parameters: a list of pools in the order that they are to be exported
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
-ETC="$SCRIPT_DIR/../../etc"
+CONFDIR="$SCRIPT_DIR/../../etc/bootstrap-zfs-debian-root"
 
 # shellcheck disable=SC1090
-source "$ETC/bootstrap-zfs-root/conf.sh"
+source "$CONFDIR/conf.sh"
 
 STAGE2_BOOTSTRAP=stage-2-bootstrap.sh
 
