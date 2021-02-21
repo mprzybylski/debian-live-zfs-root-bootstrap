@@ -106,6 +106,7 @@ while true; do
           # check for existence of the pool!
           if ! zfs list "$2" >/dev/null 2>&1; then
             >&2 echo "ERROR: ZFS pool '$2' does not exist.  Is there a typo in the pool name?"
+            BAD_INPUT=true
           fi
           shift
         fi
@@ -125,6 +126,7 @@ while true; do
           # check for existence of the pool!
           if ! zfs list "$2" >/dev/null 2>&1; then
             >&2 echo "ERROR: ZFS pool '$2' does not exist.  Is there a typo in the pool name?"
+            BAD_INPUT=true
           fi
           shift
         fi
@@ -309,6 +311,13 @@ i=0
 set -x
 zpool export -a
 
+if [[ $(ls -1 "$TARGET_DIRNAME") -gt 0 ]]; then
+  >&2 echo "ERROR: chroot directory '$TARGET_DIRNAME' is not empty.
+This will prevent $ROOT_POOL/ROOT/debian from mounting properly.
+Exiting."
+  exit 1
+fi
+
 zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=none "$ROOT_POOL"
 zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=none "$BOOT_POOL"
 
@@ -360,10 +369,6 @@ mkdir "${TARGET_DIRNAME}/proc"
 
 mkdir "${TARGET_DIRNAME}/sys"
 mount -o bind /sys "${TARGET_DIRNAME}/sys"
-
-# FIXME: debugging code to be removed later
-echo "dropping to a shell to verify that everything is mounted where it should be"
-/bin/bash --login
 
 if ! cdebootstrap $DEBIAN_SUITE "${TARGET_DIRNAME}" "${DEBIAN_MIRROR}"; then
     >&2 echo "Failed to setup root filesystem in $ROOTFS"
