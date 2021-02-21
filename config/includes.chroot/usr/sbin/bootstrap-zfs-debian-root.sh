@@ -55,8 +55,6 @@ ETC="$SCRIPT_DIR/../../etc"
 LIB="$SCRIPT_DIR/../lib"
 
 # shellcheck disable=SC1090
-source "$ETC/bootstrap-zfs-root/conf.sh"
-# shellcheck disable=SC1090
 source "$LIB/bootstrap-zfs-root/common_functions.sh"
 # shellcheck disable=SC1090
 source "$LIB/bootstrap-zfs-root/partition_functions.sh"
@@ -77,6 +75,7 @@ LEGACY_GRUB_BOOT=false
 EFI_GRUB_BOOT=false
 IPV4_ADDRESSES=( )
 BAD_INPUT=false
+TARGET_DIRNAME=$(mktemp -d)
 
 LOOPBACK_IF_NAME=lo
 IMPORT_BOOTPOOL_UNIT_NAME=zfs-import-bootpool.service
@@ -372,7 +371,7 @@ mkdir "${TARGET_DIRNAME}/sys"
 mount -o bind /sys "${TARGET_DIRNAME}/sys"
 
 if ! cdebootstrap $DEBIAN_SUITE "${TARGET_DIRNAME}" "${DEBIAN_MIRROR}"; then
-    >&2 echo "Failed to setup root filesystem in $ROOTFS"
+    >&2 echo "Failed to setup root filesystem in $ROOT_POOL"
     exit 4
 fi
 
