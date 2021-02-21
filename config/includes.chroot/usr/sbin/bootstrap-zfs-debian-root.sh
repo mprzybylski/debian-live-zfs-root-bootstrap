@@ -311,7 +311,8 @@ i=0
 set -x
 zpool export -a
 
-if [[ $(ls -1 "$TARGET_DIRNAME") -gt 0 ]]; then
+# shellcheck disable=SC2012
+if [[ $(ls -1 "$TARGET_DIRNAME" | wc -l) -gt 0 ]]; then
   >&2 echo "ERROR: chroot directory '$TARGET_DIRNAME' is not empty.
 This will prevent $ROOT_POOL/ROOT/debian from mounting properly.
 Exiting."
