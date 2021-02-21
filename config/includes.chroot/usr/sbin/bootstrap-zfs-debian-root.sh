@@ -24,6 +24,8 @@ Options:
 
   -n                        Non-interactive mode.
 
+  -N                        Include non-free packages in installed sources.list
+
   -R <root password>        Root password for the bootstrapped system
 
   -k <root ssh public key>  Public key to append to /root/.ssh/authorized_keys
@@ -64,6 +66,7 @@ exit_if_gnu_getopt_not_in_path
 
 DEBIAN_MIRROR="http://ftp.us.debian.org/debian/"
 DEBIAN_SUITE=buster
+NON_FREE=""
 STAGE2_BOOTSTRAP=stage-2-bootstrap.sh
 
 NON_INTERACTIVE=false
@@ -78,7 +81,7 @@ BAD_INPUT=false
 LOOPBACK_IF_NAME=lo
 IMPORT_BOOTPOOL_UNIT_NAME=zfs-import-bootpool.service
 
-args="$(getopt -o "negr:R:k:b:B:i:H:m:h" -l "help" -- "$@")"
+args="$(getopt -o "nNegr:R:k:b:B:i:H:m:h" -l "help" -- "$@")"
 eval set -- "$args"
 
 while true; do
@@ -128,6 +131,9 @@ while true; do
       ;;
       -n )
         NON_INTERACTIVE=true
+      ;;
+      -N )
+        NON_FREE=non-free
       ;;
       -R )
         if [[ "$2" =~ ^- ]]; then
@@ -365,18 +371,18 @@ zfs set devices=off "$ROOT_POOL"
 cp -a /target_config/* "${TARGET_DIRNAME}/"
 
 cat > "$TARGET_DIRNAME/etc/apt/sources.list" <<SOURCES_DOT_LIST
-deb [arch=i386,amd64] $DEBIAN_MIRROR $DEBIAN_SUITE main contrib
+deb [arch=i386,amd64] $DEBIAN_MIRROR $DEBIAN_SUITE main contrib $NON_FREE
 deb-src $DEBIAN_MIRROR $DEBIAN_SUITE main contrib
 
-deb [arch=i386,amd64] http://security.debian.org/debian-security $DEBIAN_SUITE/updates main contrib
+deb [arch=i386,amd64] http://security.debian.org/debian-security $DEBIAN_SUITE/updates main contrib $NON_FREE
 deb-src http://security.debian.org/debian-security $DEBIAN_SUITE/updates main contrib
 
 # buster-updates, previously known as 'volatile'
-deb [arch=i386,amd64] $DEBIAN_MIRROR $DEBIAN_SUITE-updates main contrib
+deb [arch=i386,amd64] $DEBIAN_MIRROR $DEBIAN_SUITE-updates main contrib $NON_FREE
 deb-src $DEBIAN_MIRROR $DEBIAN_SUITE-updates main contrib
 
 # buster backports:
-deb [arch=i386,amd64] http://deb.debian.org/debian buster-backports main contrib
+deb [arch=i386,amd64] http://deb.debian.org/debian buster-backports main contrib $NON_FREE
 SOURCES_DOT_LIST
 
 if [ -n "$ROOT_PUBLIC_KEY" ]; then

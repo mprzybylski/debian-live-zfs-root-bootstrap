@@ -4,8 +4,10 @@
 #FIXME: add mutually exclusive BIOS and EFI boot flags
 USAGE="\
 Usage:
-stage-2-bootstrap.sh [options] -e -r <rootpool> -c </host/chroot/path>
-stage-2-bootstrap.sh [options] -g -r <rootpool> -c </host/chroot/path>
+stage-2-bootstrap.sh [options] -e -r <rootpool> -b <bootpool>
+  -c </host/chroot/path> [additional_pool_1] [additional_pool_2]...
+stage-2-bootstrap.sh [options] -g -r <rootpool> -b <bootpool>
+  -c </host/chroot/path> [additional_pool_1] [additional_pool_2]...
 
 Makes a chroot setup with cdebootstrap bootable.
 
@@ -14,6 +16,8 @@ Options:
 
   -c </host/chroot/path>    That path given as 'NEWROOT' when chroot was
                             called. (Required.)
+
+  -b <zfs boot pool>        ZFS pool name hosting /boot. (Required.)
 
   -n                        Non-interactive mode.
 
@@ -50,41 +54,53 @@ root_auth_keys_file_present(){
   [ -f "$ROOT_AUTH_KEYS_FILE" ] && [[ $(ls -s /root/.ssh/authorized_keys | cut -d \  -f 1) != 0 ]]
 }
 
-while getopts ":nc:egr:R:B:H:h" option; do
-  case $option in
-    c )
+args="$(getopt -o "ncegr:R:b:B:i:h" -l "help" -- "$@")"
+eval set -- "$args"
+
+while true; do
+  case $1 in
+    -c )
       HOST_CHROOT_PATH="$OPTARG"
     ;;
-    e )
+    -e )
       EFI_GRUB_BOOT=true
     ;;
-    g )
+    -g )
       LEGACY_GRUB_BOOT=true
     ;;
-    n )
+    -n )
       NON_INTERACTIVE=true
     ;;
-    R )
-      ROOT_PASSWORD="$OPTARG"
+    -R )
+      ROOT_PASSWORD="$2"
+      shift
     ;;
-    r )
-      ROOT_POOL="$OPTARG"
+    -r )
+      ROOT_POOL="$2"
+      shift
     ;;
-    B )
-      BOOT_DEVICES+=( "$OPTARG" )
+    -b )
+      BOOT_POOL="$2"
+      shift
     ;;
-    H )
-      HOSTNAME=$OPTARG
+    -B )
+      BOOT_DEVICES+=( "$2" )
+      shift
     ;;
-    h )
+    -H )
+      HOSTNAME="$2"
+      shift
+    ;;
+    -h )
       echo "$USAGE"
       exit 0
     ;;
-    * )
-      >&2 echo "'$OPTARG' is not a recognized option flag."
-      BAD_INPUT=true
+    --)
+      shift
+      break
     ;;
   esac
+  shift
 done
 
 shift $((OPTIND-1))
@@ -185,15 +201,11 @@ if ! apt-get update; then
 fi
 
 # Make package installations dependent on their predecessors for easier troubleshooting
-wrapt-get $NON_INTERACTIVE locales && \
+wrapt-get $NON_INTERACTIVE console-setup locales && \
 wrapt-get $NON_INTERACTIVE openssh-server && \
-wrapt-get $NON_INTERACTIVE linux-image-amd64 linux-headers-amd64 lsb-release build-essential gdisk dkms && \
+wrapt-get $NON_INTERACTIVE linux-image-amd64 linux-headers-amd64 lsb-release build-essential gdisk dkms dpkg-dev && \
 wrapt-get $NON_INTERACTIVE gawk && \
 wrapt-get $NON_INTERACTIVE zfs-initramfs
-
-if $LEGACY_GRUB_BOOT; then
-  wrapt-get $NON_INTERACTIVE grub-pc
-fi
 
 if [ $apt_get_errors -gt 0 ]; then
     >&2 echo "Failed to install one or more required, stage 2 packages."
@@ -218,38 +230,6 @@ ff02::2 ip6-allrouters
 ff02::3 ip6-allhosts
 ETC_SLASH_HOSTS
 
-ZED_RUN_TIME=5
-ZFS_LIST_CACHEFILE="/etc/zfs/zfs-list.cache/$ROOT_POOL"
-# enable zfs-mount-generator(8)
-mkdir /etc/zfs/zfs-list.cache
-
-touch "$ZFS_LIST_CACHEFILE"
-ln -s /usr/lib/zfs-linux/zed.d/history_event-zfs-list-cacher.sh /etc/zfs/zed.d
-
-zed -F &
-ZED_PID=$!
-# wait for zed to write to $ZFS_LIST_CACHEFILE
-while [[ $(find "$ZFS_LIST_CACHEFILE" -printf '%s\n' ) -eq 0 ]]; do
-  sleep 1
-done
-kill -TERM $ZED_PID
-
-# yank the altroot prefix off of the zfs-list cachefile.
-sed -Ei "s|$HOST_CHROOT_PATH/?|/|" "$ZFS_LIST_CACHEFILE"
-
-# enable mounting of /boot at the correct time
-systemctl enable zfs-import-bootpool.service
-
-grub-probe /boot
-update-initramfs -c -k all
-
-if ! update-grub; then
-    >&2 echo "'update-grub' failed.  Your system is probably not bootable."
-    exit 3
-fi
-
-grub_errors=0
-
 if $EFI_GRUB_BOOT; then
   wrapt-get $NON_INTERACTIVE dosfstools efivar
   mkdosfs -F 32 -s 1 -n EFI "${BOOT_DEVICES[0]}"
@@ -261,6 +241,20 @@ if $EFI_GRUB_BOOT; then
     0 1 >> /etc/fstab
   mount "$EFI_SYSTEM_PARTITION_MOUNTPOINT"
   wrapt-get $NON_INTERACTIVE grub-efi-amd64 shim-signed
+fi
+
+grub-probe /boot
+update-initramfs -c -k all
+# The OpenZFS doc says "Note: Ignore errors from osprober, if present." so commenting out error detection here.
+#if ! update-grub; then
+#    >&2 echo "'update-grub' failed.  Your system is probably not bootable."
+#    exit 3
+#fi
+update-grub
+
+grub_errors=0
+
+if $EFI_GRUB_BOOT; then
   grub-install --target=x86_64-efi --efi-directory="$EFI_SYSTEM_PARTITION_MOUNTPOINT" \
     --bootloader-id=debian --recheck --no-floppy || ((grub_errors++))
   # Setup EFI boot partition on any redundant boot devices.
@@ -296,6 +290,42 @@ if [ $grub_errors -gt 0 ]; then
     exit 2
 fi
 
+# enable zfs-mount-generator(8)
+mkdir /etc/zfs/zfs-list.cache
+
+ZFS_POOLS=("$@")
+ZFS_POOLS+=("$ROOT_POOL" "$BOOT_POOL")
+
+for pool in "${ZFS_POOLS[@]}"; do
+  touch "/etc/zfs/zfs-list.cache/$pool"
+done
+ln -s /usr/lib/zfs-linux/zed.d/history_event-zfs-list-cacher.sh /etc/zfs/zed.d
+
+zed -F &
+ZED_PID=$!
+# wait for zed to write to $ZFS_LIST_ROOT_CACHEFILE
+echo "Waiting for zed to populate $ZFS_LIST_ROOT_CACHEFILE"
+keep_waiting=true
+while $keep_waiting; do
+  keep_waiting=false
+  for pool in "${ZFS_POOLS[@]}"; do
+    if [[ $(find "/etc/zfs/zfs-list.cache/$pool" -printf '%s\n' ) -eq 0 ]]; then
+      keep_waiting=true
+    fi
+  done
+  sleep 1
+done
+kill -TERM $ZED_PID
+
+# yank the altroot prefix off of the zfs-list cachefile.
+sed -Ei "s|$HOST_CHROOT_PATH/?|/|" "/etc/zfs/zfs-list.cache/*"
+
+# enable mounting of /boot at the correct time
+systemctl enable zfs-import-bootpool.service
+
+if $LEGACY_GRUB_BOOT; then
+  wrapt-get $NON_INTERACTIVE grub-pc
+fi
 
 if [ -n "$ROOT_PASSWORD" ]; then
     if ! echo "root:$ROOT_PASSWORD" | chpasswd; then
