@@ -78,7 +78,6 @@ LEGACY_GRUB_BOOT=false
 EFI_GRUB_BOOT=false
 IPV4_ADDRESSES=( )
 BAD_INPUT=false
-TARGET_DIRNAME=$(mktemp -d)
 
 LOOPBACK_IF_NAME=lo
 IMPORT_BOOTPOOL_UNIT_NAME=zfs-import-bootpool.service
@@ -377,8 +376,6 @@ if ! cdebootstrap $DEBIAN_SUITE "${TARGET_DIRNAME}" "${DEBIAN_MIRROR}"; then
     >&2 echo "Failed to setup root filesystem in $ROOT_POOL"
     exit 4
 fi
-
-zfs set devices=off "$ROOT_POOL"
 
 # copy custom apt and other config files into new root
 cp -a /target_config/* "${TARGET_DIRNAME}/"
