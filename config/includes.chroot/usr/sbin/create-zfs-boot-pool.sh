@@ -20,7 +20,7 @@ source "$ETC/bootstrap-zfs-root/conf.sh"
 # shellcheck disable=SC1090
 source "$LIB/bootstrap-zfs-root/common_functions.sh"
 
-ZFS_BPOOL_CREATION_OPTS="-o ashift=12 -o cachefile=none -o altroot=${TARGET_DIRNAME} -d \
+ZFS_BPOOL_CREATION_OPTS="-o ashift=12 -o cachefile=none -o altroot=${ZPOOL_ALTROOT} -d \
     -o feature@async_destroy=enabled \
     -o feature@bookmarks=enabled \
     -o feature@embedded_data=enabled \

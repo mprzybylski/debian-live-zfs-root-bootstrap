@@ -16,7 +16,7 @@ source "$ETC/bootstrap-zfs-root/conf.sh"
 # shellcheck disable=SC1090
 source "$LIB/bootstrap-zfs-root/common_functions.sh"
 
-ZFS_RPOOL_CREATION_OPTS="-o ashift=12 -o cachefile=none -o altroot=${TARGET_DIRNAME}"
+ZFS_RPOOL_CREATION_OPTS="-o ashift=12 -o cachefile=none -o altroot=${ZPOOL_ALTROOT}"
 ZFS_RPOOL_TOPLEVEL_DATASET_OPTS="-O compression=lz4 -O recordsize=1M -O acltype=posixacl -O canmount=off \
     -O dnodesize=auto -O normalization=formD -O relatime=on -O xattr=sa -O mountpoint=/"
 
@@ -59,7 +59,7 @@ while true; do
       ;;
     -R)
       >&2 echo "Warning: for compatibility with other scripts on this live image, the pool's"
-      >&2 echo "temporary mount point is set to $TARGET_DIRNAME.  Ignoring '$1' flag."
+      >&2 echo "temporary mount point is set to $ZPOOL_ALTROOT.  Ignoring '$1' flag."
       if ! [[ "$2" =~ ^- ]]; then
         shift
       fi

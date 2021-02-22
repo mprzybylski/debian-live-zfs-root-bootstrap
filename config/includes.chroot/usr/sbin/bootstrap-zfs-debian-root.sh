@@ -51,7 +51,7 @@ Options:
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 CLEANUP_SCRIPT="$SCRIPT_DIR/cleanup.sh"
-CONFDIR="$SCRIPT_DIR/../../etc/bootstrap-zfs-debian-root"
+CONFDIR="$SCRIPT_DIR/../../etc/bootstrap-zfs-root"
 LIB="$SCRIPT_DIR/../lib"
 mkdir -p "$CONFDIR"
 echo "TARGET_DIRNAME='$(mktemp -d)'" >> "$CONFDIR/conf.sh"
