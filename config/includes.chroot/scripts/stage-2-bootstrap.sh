@@ -130,10 +130,9 @@ $0 non-interactively.
   BAD_INPUT=true
 fi
 
-# Sanity check: grub config pre-seeding required in non-interactive mode
-if $NON_INTERACTIVE && [ ${#BOOT_DEVICES[@]} -eq 0 ]; then
-    >&2 echo "ERROR: At least one boot device must be specified when running $0
-non-interactively
+# Sanity check: User must specify at least one boot device for grub installation
+if [ ${#BOOT_DEVICES[@]} -eq 0 ]; then
+    >&2 echo "ERROR: At least one boot device must be specified
 "
     BAD_INPUT=true
 fi
@@ -235,13 +234,21 @@ if $EFI_GRUB_BOOT; then
   mkdosfs -F 32 -s 1 -n EFI "${BOOT_DEVICES[0]}"
   mkdir -p "$EFI_SYSTEM_PARTITION_MOUNTPOINT"
   # add to fstab
-  echo /dev/disk/by-uuid/"$(blkid -s UUID -o value "${BOOT_DEVICES[0]}")" \
-    "$EFI_SYSTEM_PARTITION_MOUNTPOINT" vfat \
-    x-systemd.idle-timeout=1min,x-systemd.automount,noauto \
-    0 1 >> /etc/fstab
+  set -x
+  cat >> /etc/fstab <<-FSTAB_ENTRY
+    /dev/disk/by-uuid/$(blkid -s UUID -o value "${BOOT_DEVICES[0]}") \
+        $EFI_SYSTEM_PARTITION_MOUNTPOINT vfat \
+        x-systemd.idle-timeout=1min,x-systemd.automount,noauto \
+        0 1
+  set +x
+  echo "DEBUG: /etc/fstab contents:"
+  cat /etc/fstab
+FSTAB_ENTRY
   mount "$EFI_SYSTEM_PARTITION_MOUNTPOINT"
   wrapt-get $NON_INTERACTIVE grub-efi-amd64 shim-signed
 fi
+
+
 
 grub-probe /boot
 update-initramfs -c -k all

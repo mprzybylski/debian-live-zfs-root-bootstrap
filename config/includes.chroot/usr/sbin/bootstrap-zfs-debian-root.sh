@@ -161,6 +161,7 @@ while true; do
           >&2 echo "Error: Argument expected for '$1' flag"
           BAD_INPUT=true
         else
+          # FIXME: add uniqueness check to prevent a user from accidentally specifying the same device twice
           if is_block_device "$2"; then
               BOOT_DEVICES+=( "$2" )
           else
@@ -255,10 +256,9 @@ if $NON_INTERACTIVE &&  [ -z "$ROOT_PASSWORD" ]; then
     BAD_INPUT=true
 fi
 
-# Sanity check: grub config pre-seeding required in non-interactive mode
-if $NON_INTERACTIVE && [ ${#BOOT_DEVICES[@]} -eq 0 ]; then
-    >&2 echo "Error: At least one boot device must be specified when running
-$0 non-interactively
+# Sanity check: require user to specify at least one boot device.
+if [ ${#BOOT_DEVICES[@]} -eq 0 ]; then
+    >&2 echo "Error: At least one boot device must be specified.
 "
     BAD_INPUT=true
 fi

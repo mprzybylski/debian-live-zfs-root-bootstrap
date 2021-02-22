@@ -6,11 +6,14 @@
 
 # $1: path to a block device, i.e. /dev/sda
 is_block_device(){
+    # shellcheck disable=SC2046
     return $(ls -l $1 | awk '{if(substr($1, 1, 1) == "b")print 0;else print 1; exit}')
 }
 
 # $1: path to a block device, i.e. /dev/sda
 is_partition(){
+    # shellcheck disable=SC2046
+    # shellcheck disable=SC2012
     return $(ls -l $1 | awk '
         # major numbers 8,65-71,138-135 ($5) are SCSI disk devices
         # minor numbers for whole drives are multiples of 16
@@ -25,8 +28,9 @@ is_partition(){
 # $1: path to a block device, i.e. /dev/sda
 get_first_available_partition_number(){
     i=1
-    for partnum in `sgdisk -p "$1" | awk '/^Number/{while(getline)print $1}'`; do
+    for partnum in $(sgdisk -p "$1" | awk '/^Number/{while(getline)print $1}'); do
         # Partition 9 reserved for ZFS import/export data
+        # shellcheck disable=SC2086
         if [ $i -eq $partnum ] || [ $i -eq 9 ]; then
             ((i++))
         else
