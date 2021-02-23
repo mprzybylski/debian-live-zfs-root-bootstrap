@@ -273,23 +273,17 @@ grub_errors=0
 
 if $EFI_GRUB_BOOT; then
   grub-install --target=x86_64-efi --efi-directory="$EFI_SYSTEM_PARTITION_MOUNTPOINT" \
-    --bootloader-id=debian --recheck --no-floppy || ((grub_errors++))
+    --bootloader-id=debian --recheck --no-floppy
   # Setup EFI boot partition on any redundant boot devices.
-  # FIXME: remove after debugging complete
-  set -x
   umount "$EFI_SYSTEM_PARTITION_MOUNTPOINT"
-  i=1
   while [ $i -lt ${#BOOT_DEVICES[@]} ]; do
     dd if="${BOOT_DEVICES[0]}" of="${BOOT_DEVICES[$i]}"
       eval "$(awk 'match($0, '"$BOOT_DEV_REGEX"', a){print "dev_path="a[1]a[3]a[5]";part_num="a[2]a[4]a[6] }' <<<"${BOOT_DEVICES[$i]}")"
     # shellcheck disable=SC2154
-    efibootmgr -c -g -d "$dev_path" -p "$part_num" -L "debian-$((i+1))" -l '\EFI\debian\grubx64.efi' \
-      || ((grub_errors++))
+    efibootmgr -c -g -d "$dev_path" -p "$part_num" -L "debian-$((i+1))" -l '\EFI\debian\grubx64.efi'
     (( i++ ))
   done
   mount "$EFI_SYSTEM_PARTITION_MOUNTPOINT"
-  # FIXME: remove after debugging complete
-  set +x
 fi
 
 if $LEGACY_GRUB_BOOT; then
@@ -310,7 +304,9 @@ fi
 # enable zfs-mount-generator(8)
 mkdir /etc/zfs/zfs-list.cache
 
-ZFS_POOLS=("$@")
+if [ $# -gt 0 ]; then
+  ZFS_POOLS=("$@")
+fi
 ZFS_POOLS+=("$ROOT_POOL" "$BOOT_POOL")
 
 for pool in "${ZFS_POOLS[@]}"; do

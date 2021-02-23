@@ -14,7 +14,7 @@ fi
 
 # Parameters: a list of pools in the order that they are to be exported
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
-CONFDIR="$SCRIPT_DIR/../../etc/bootstrap-zfs-debian-root"
+CONFDIR="$SCRIPT_DIR/../../etc/bootstrap-zfs-root"
 
 # shellcheck disable=SC1090
 source "$CONFDIR/conf.sh"
@@ -34,5 +34,7 @@ set -e #Exit with an error immediately if any of the zpool exports fail
 for pool in "$@"; do
     zpool export "$pool"
 done
+
+rmdir "$TARGET_DIRNAME"
 
 echo "All ZFS pools exported.  Ready for reboot"

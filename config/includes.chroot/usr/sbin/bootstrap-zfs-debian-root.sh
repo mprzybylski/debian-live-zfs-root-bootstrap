@@ -53,10 +53,6 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 CLEANUP_SCRIPT="$SCRIPT_DIR/cleanup.sh"
 CONFDIR="$SCRIPT_DIR/../../etc/bootstrap-zfs-root"
 LIB="$SCRIPT_DIR/../lib"
-mkdir -p "$CONFDIR"
-echo "TARGET_DIRNAME='$(mktemp -d)'" >> "$CONFDIR/conf.sh"
-
-source "$CONFDIR/conf.sh"
 # shellcheck disable=SC1090
 source "$LIB/bootstrap-zfs-root/common_functions.sh"
 # shellcheck disable=SC1090
@@ -227,6 +223,12 @@ while true; do
     shift
 done
 
+if [ "$BOOT_POOL" == "$ROOT_POOL" ]; then
+  >&2 echo "ERROR: The ZFS pool hosting /boot must be separate from the pool hosting /, and
+only grub-compatible ZFS pool features may be enabled for the /boot pool."
+  BAD_INPUT=true
+fi
+
 if $LEGACY_GRUB_BOOT && $EFI_GRUB_BOOT; then
   >&2 echo "ERROR: Legacy grub boot and EFI grub boot flags, (-e and -g) are mutually
 exclusive."
@@ -267,6 +269,10 @@ if $BAD_INPUT; then
     >&2 echo "$USAGE"
     exit 1
 fi
+
+mkdir -p "$CONFDIR"
+echo "TARGET_DIRNAME='$(mktemp -d)'" >> "$CONFDIR/conf.sh"
+source "$CONFDIR/conf.sh"
 
 gen_stage2_command(){
   echo -n "chroot ${TARGET_DIRNAME} /root/$STAGE2_BOOTSTRAP -r $ROOT_POOL -c $TARGET_DIRNAME"
