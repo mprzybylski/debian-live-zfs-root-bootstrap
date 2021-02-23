@@ -235,15 +235,15 @@ if $EFI_GRUB_BOOT; then
   mkdir -p "$EFI_SYSTEM_PARTITION_MOUNTPOINT"
   # add to fstab
   set -x
-  cat >> /etc/fstab <<-FSTAB_ENTRY
-    /dev/disk/by-uuid/$(blkid -s UUID -o value "${BOOT_DEVICES[0]}") \
-        $EFI_SYSTEM_PARTITION_MOUNTPOINT vfat \
-        x-systemd.idle-timeout=1min,x-systemd.automount,noauto \
-        0 1
+  cat >> /etc/fstab <<FSTAB_ENTRY
+/dev/disk/by-uuid/$(blkid -s UUID -o value "${BOOT_DEVICES[0]}") \
+$EFI_SYSTEM_PARTITION_MOUNTPOINT vfat \
+x-systemd.idle-timeout=1min,x-systemd.automount,noauto \
+0 1
   set +x
+FSTAB_ENTRY
   echo "DEBUG: /etc/fstab contents:"
   cat /etc/fstab
-FSTAB_ENTRY
   mount "$EFI_SYSTEM_PARTITION_MOUNTPOINT"
   wrapt-get $NON_INTERACTIVE grub-efi-amd64 shim-signed
 fi
