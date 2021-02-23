@@ -21,7 +21,7 @@ source "$LIB/bootstrap-zfs-root/partition_functions.sh"
 
 if [ -n "$1" ] && is_block_device "$1" && ! is_partition "$1"; then
     PARTNUM=`get_first_available_partition_number "$1"`
-    sgdisk -a 1 --new=$PARTNUM:1M:+512M --typecode=$PARTNUM:EF00 --change-name=$PARTNUM:"UEFI boot partition" "$1"
+    sgdisk --new=$PARTNUM:1M:+512M --typecode=$PARTNUM:EF00 --change-name=$PARTNUM:"UEFI boot partition" "$1"
     partprobe $1
 else
     >&2 echo "Error: Argument must be a block device and not a partition."
