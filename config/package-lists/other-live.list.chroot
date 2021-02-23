@@ -3,6 +3,7 @@
 
 cdebootstrap
 curl
+dosfstools
 ifupdown
 isc-dhcp-client
 less

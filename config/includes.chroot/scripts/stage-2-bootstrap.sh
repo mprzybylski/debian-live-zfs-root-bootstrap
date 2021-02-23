@@ -1,7 +1,6 @@
 #!/bin/bash --login
 
 #FIXME: add a debug flag
-#FIXME: add mutually exclusive BIOS and EFI boot flags
 USAGE="\
 Usage:
 stage-2-bootstrap.sh [options] -e -r <rootpool> -b <bootpool>
@@ -233,17 +232,28 @@ if $EFI_GRUB_BOOT; then
   wrapt-get $NON_INTERACTIVE dosfstools efivar
   mkdosfs -F 32 -s 1 -n EFI "${BOOT_DEVICES[0]}"
   mkdir -p "$EFI_SYSTEM_PARTITION_MOUNTPOINT"
+  ESP_UUID=$(blkid -s UUID -o value "${BOOT_DEVICES[0]}")
+  BLKID_EXIT_CODE=$?
+  case $BLKID_EXIT_CODE in
+    2)
+      >&2 echo "ERROR: blkid is unable to find the filesystem UUID for ${BOOT_DEVICES[0]}
+This can be caused by incorrect partition alignment, and/or by garbage left in
+the region by previous partitioning and formatting attempts.  Please
+double-check your partition alignment and consider zeroing-out the region of
+the partition,
+(i.e. 'dd if=/dev/zero of=/dev/whole_drive bs=1M [offset=...] count=...')"
+      exit 1
+    ;;
+    4)
+      >&2 echo "ERROR: blkid detected a usage or other type of error."
+      exit 1
+    ;;
+  esac
   # add to fstab
-  set -x
   cat >> /etc/fstab <<FSTAB_ENTRY
-/dev/disk/by-uuid/$(blkid -s UUID -o value "${BOOT_DEVICES[0]}") \
-$EFI_SYSTEM_PARTITION_MOUNTPOINT vfat \
-x-systemd.idle-timeout=1min,x-systemd.automount,noauto \
-0 1
-  set +x
+/dev/disk/by-uuid/$ESP_UUID $EFI_SYSTEM_PARTITION_MOUNTPOINT vfat
+x-systemd.idle-timeout=1min,x-systemd.automount,noauto 0 1
 FSTAB_ENTRY
-  echo "DEBUG: /etc/fstab contents:"
-  cat /etc/fstab
   mount "$EFI_SYSTEM_PARTITION_MOUNTPOINT"
   wrapt-get $NON_INTERACTIVE grub-efi-amd64 shim-signed
 fi

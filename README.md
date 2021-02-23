@@ -16,7 +16,6 @@ If you are interested in forking or contributing to this project, please conside
 
 ## Limitations
 * The scripts included with this image are currently only tested against Debian 10.x, (Buster).
-* EFI-based boot setup is not yet supported.
 
 (FIXME: Finish rewriting around a pre-built image hosted at github)
 # Virtual-machine-based quick start
