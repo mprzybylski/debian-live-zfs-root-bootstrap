@@ -102,8 +102,6 @@ while true; do
   shift
 done
 
-shift $((OPTIND-1))
-
 if $LEGACY_GRUB_BOOT && $EFI_GRUB_BOOT; then
   >&2 echo "ERROR: Legacy grub boot and EFI grub boot flags, (-e and -g) are mutually
 exclusive."

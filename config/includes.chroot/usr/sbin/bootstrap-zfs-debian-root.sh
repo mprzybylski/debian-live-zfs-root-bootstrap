@@ -11,6 +11,11 @@ Installs bootable Debian root filesystem to the specified ZFS pool(s). The
 administrator may specify additional pools that are also mounted on the
 bootstrapped system.
 
+NOTE: bootstrap-zfs-debian-root.sh also honors the http_proxy environment
+variable.  One can set http_proxy to point at a caching package proxy like
+apt-cacher-ng to speed up this script while reducing Internet bandwidth
+consumption.
+
 Options:
   -r <zfs pool name>        Root ZFS pool name. (Required.)
 
@@ -274,8 +279,9 @@ mkdir -p "$CONFDIR"
 echo "TARGET_DIRNAME='$(mktemp -d)'" >> "$CONFDIR/conf.sh"
 source "$CONFDIR/conf.sh"
 
+# pass trailing arguments from the command line ( "$@" )
 gen_stage2_command(){
-  echo -n "chroot ${TARGET_DIRNAME} /root/$STAGE2_BOOTSTRAP -r $ROOT_POOL -c $TARGET_DIRNAME"
+  echo -n "chroot ${TARGET_DIRNAME} /root/$STAGE2_BOOTSTRAP -r $ROOT_POOL -b $BOOT_POOL -c $TARGET_DIRNAME"
   $LEGACY_GRUB_BOOT && echo -n " -g"
   $EFI_GRUB_BOOT && echo -n " -e"
   $NON_INTERACTIVE && echo -n " -n"
@@ -286,6 +292,7 @@ gen_stage2_command(){
     echo -n " -B ${BOOT_DEVICES[$i]}"
     ((i++))
   done
+  echo -n "${@}"
 }
 
 sigint_handler(){
@@ -326,6 +333,7 @@ Exiting."
   exit 1
 fi
 
+# FIXME: add zpool import flags and other logic to handle these datasets already existing
 zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=none "$ROOT_POOL"
 zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=none "$BOOT_POOL"
 
@@ -461,7 +469,10 @@ cp /scripts/$STAGE2_BOOTSTRAP "${TARGET_DIRNAME}/root/$STAGE2_BOOTSTRAP"
 # if it happens to point to caching proxy like apt-cacher-ng, it can greatly accelerate installs
 
 # shellcheck disable=SC2091
-if ! $(gen_stage2_command); then
+>&2 echo "DEBUG: Stage 2 bootstrap command:
+$(gen_stage2_command "$@")"
+# shellcheck disable=SC2091
+if ! $(gen_stage2_command "$@"); then
     >&2 echo "Stage 2 bootstrap failed. Exiting"
     exit 5
 fi
