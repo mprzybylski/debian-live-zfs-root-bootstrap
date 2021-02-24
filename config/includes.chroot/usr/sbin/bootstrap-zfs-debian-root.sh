@@ -292,7 +292,9 @@ gen_stage2_command(){
     echo -n " -B ${BOOT_DEVICES[$i]}"
     ((i++))
   done
-  echo -n "${@}"
+  if [ $# -gt 0 ]; then
+    echo -n ' ' "${@}"
+  fi
 }
 
 sigint_handler(){
