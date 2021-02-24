@@ -228,6 +228,9 @@ ff02::2 ip6-allrouters
 ff02::3 ip6-allhosts
 ETC_SLASH_HOSTS
 
+# enable mounting of /boot at the correct time
+systemctl enable zfs-import-bootpool.service
+
 if $EFI_GRUB_BOOT; then
   wrapt-get $NON_INTERACTIVE dosfstools efivar
   mkdosfs -F 32 -s 1 -n EFI "${BOOT_DEVICES[0]}"
@@ -258,7 +261,9 @@ FSTAB_ENTRY
   wrapt-get $NON_INTERACTIVE grub-efi-amd64 shim-signed
 fi
 
-
+if $LEGACY_GRUB_BOOT; then
+  wrapt-get $NON_INTERACTIVE grub-pc
+fi
 
 grub-probe /boot
 update-initramfs -c -k all
@@ -334,13 +339,6 @@ set +x
 
 # yank the altroot prefix off of the zfs-list cachefile.
 sed -Ei "s|$HOST_CHROOT_PATH/?|/|" "/etc/zfs/zfs-list.cache/*"
-
-# enable mounting of /boot at the correct time
-systemctl enable zfs-import-bootpool.service
-
-if $LEGACY_GRUB_BOOT; then
-  wrapt-get $NON_INTERACTIVE grub-pc
-fi
 
 if [ -n "$ROOT_PASSWORD" ]; then
     if ! echo "root:$ROOT_PASSWORD" | chpasswd; then
