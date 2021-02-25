@@ -51,6 +51,13 @@ Options:
                             be applied to non-loopback interfaces in the order
                             they appear in the output of 'ip -o -a link'.
 
+  -p <package_name>         Additional packages to be installed on the target
+                            system during the stage-2-bootstrap phase.  This
+                            flag may be used more than once to install multiple
+                            packages.  Packages will be installed with their
+                            dependencies in the order in which they were
+                            specified on the command line.
+
   -h | --help               Print this usage information and exit.
 "
 
@@ -75,6 +82,7 @@ NON_INTERACTIVE=false
 ROOT_PASSWORD=""
 ROOT_PUBLIC_KEY=""
 BOOT_DEVICES=( )
+EXTRA_PACKAGES=( )
 LEGACY_GRUB_BOOT=false
 EFI_GRUB_BOOT=false
 IPV4_ADDRESSES=( )
@@ -83,36 +91,11 @@ BAD_INPUT=false
 LOOPBACK_IF_NAME=lo
 IMPORT_BOOTPOOL_UNIT_NAME=zfs-import-bootpool.service
 
-args="$(getopt -o "nNegr:R:k:b:B:i:H:m:h" -l "help" -- "$@")"
+args="$(getopt -o "b:B:eghi:k:m:H:nNr:R:" -l "help" -- "$@")"
 eval set -- "$args"
 
 while true; do
     case $1 in
-      -e )
-        EFI_GRUB_BOOT=true
-      ;;
-      -g )
-        LEGACY_GRUB_BOOT=true
-      ;;
-      -r )
-        if [[ "$2" =~ ^- ]]; then
-          >&2 echo "Error: Argument expected for '$1' flag"
-          BAD_INPUT=true
-        else
-          if is_valid_zpool_name_without_spaces "$2"; then
-            ROOT_POOL="$2"
-          else
-            >&2 echo "Error: invalid argument to the '$1' flag"
-            >&2 echo "$ZPOOL_NAME_ERROR_MSG_PART2"
-          fi
-          # check for existence of the pool!
-          if ! zfs list "$2" >/dev/null 2>&1; then
-            >&2 echo "ERROR: ZFS pool '$2' does not exist.  Is there a typo in the pool name?"
-            BAD_INPUT=true
-          fi
-          shift
-        fi
-      ;;
       -b )
         if [[ "$2" =~ ^- ]]; then
           >&2 echo "Error: Argument expected for '$1' flag"
@@ -133,30 +116,6 @@ while true; do
           shift
         fi
       ;;
-      -n )
-        NON_INTERACTIVE=true
-      ;;
-      -N )
-        NON_FREE=non-free
-      ;;
-      -R )
-        if [[ "$2" =~ ^- ]]; then
-          >&2 echo "Error: Argument expected for '$1' flag"
-          BAD_INPUT=true
-        else
-          ROOT_PASSWORD="$2"
-          shift
-        fi
-      ;;
-      -k )
-        if [[ "$2" =~ ^- ]]; then
-          >&2 echo "Error: Argument expected for '$1' flag"
-          BAD_INPUT=true
-        else
-          ROOT_PUBLIC_KEY="$2"
-          shift
-        fi
-      ;;
       -B )
         if [[ "$2" =~ ^- ]]; then
           >&2 echo "Error: Argument expected for '$1' flag"
@@ -172,23 +131,15 @@ while true; do
           shift
         fi
       ;;
-      -h|--help)
-          echo "$USAGE"
-          exit 0
+      -e )
+        EFI_GRUB_BOOT=true
       ;;
-      -i)
-        if [[ "$2" =~ ^- ]]; then
-          >&2 echo "Error: Argument expected for '$1' flag"
-          BAD_INPUT=true
-        else
-          if [[ "$2" =~ ^dhcp|[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[1-3]?[0-9]$ ]] ; then
-              IPV4_ADDRESSES+=( "$2" )
-          else
-              >&2 echo "'$2' is not 'dhcp' or in address/prefix-length format, i.e. 87.65.53.9/24"
-              BAD_INPUT=true
-          fi
-          shift
-        fi
+      -g )
+        LEGACY_GRUB_BOOT=true
+      ;;
+      -h|--help)
+        echo "$USAGE"
+        exit 0
       ;;
       -H)
         if [[ "$2" =~ ^- ]]; then
@@ -205,6 +156,29 @@ while true; do
           shift
         fi
       ;;
+      -i)
+        if [[ "$2" =~ ^- ]]; then
+          >&2 echo "Error: Argument expected for '$1' flag"
+          BAD_INPUT=true
+        else
+          if [[ "$2" =~ ^dhcp|[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[1-3]?[0-9]$ ]] ; then
+              IPV4_ADDRESSES+=( "$2" )
+          else
+              >&2 echo "'$2' is not 'dhcp' or in address/prefix-length format, i.e. 87.65.53.9/24"
+              BAD_INPUT=true
+          fi
+          shift
+        fi
+      ;;
+      -k )
+        if [[ "$2" =~ ^- ]]; then
+          >&2 echo "Error: Argument expected for '$1' flag"
+          BAD_INPUT=true
+        else
+          ROOT_PUBLIC_KEY="$2"
+          shift
+        fi
+      ;;
       -m)
         if [[ "$2" =~ ^- ]]; then
           >&2 echo "Error: Argument expected for '$1' flag"
@@ -217,6 +191,44 @@ while true; do
             >&2 echo "Error: '$2' is does not appear to be a valid debian mirror URL."
             BAD_INPUT=true
           fi
+          shift
+        fi
+      ;;
+      -n )
+        NON_INTERACTIVE=true
+      ;;
+      -N )
+        NON_FREE=non-free
+      ;;
+      -p)
+        EXTRA_PACKAGES+=( "$2" )
+        shift
+      ;;
+      -r )
+        if [[ "$2" =~ ^- ]]; then
+          >&2 echo "Error: Argument expected for '$1' flag"
+          BAD_INPUT=true
+        else
+          if is_valid_zpool_name_without_spaces "$2"; then
+            ROOT_POOL="$2"
+          else
+            >&2 echo "Error: invalid argument to the '$1' flag"
+            >&2 echo "$ZPOOL_NAME_ERROR_MSG_PART2"
+          fi
+          # check for existence of the pool!
+          if ! zfs list "$2" >/dev/null 2>&1; then
+            >&2 echo "ERROR: ZFS pool '$2' does not exist.  Is there a typo in the pool name?"
+            BAD_INPUT=true
+          fi
+          shift
+        fi
+      ;;
+      -R )
+        if [[ "$2" =~ ^- ]]; then
+          >&2 echo "Error: Argument expected for '$1' flag"
+          BAD_INPUT=true
+        else
+          ROOT_PASSWORD="$2"
           shift
         fi
       ;;
@@ -291,6 +303,9 @@ gen_stage2_command(){
   while [ $i -lt ${#BOOT_DEVICES[@]} ]; do
     echo -n " -B ${BOOT_DEVICES[$i]}"
     ((i++))
+  done
+  for package in "${EXTRA_PACKAGES[@]}"; do
+    echo -n "-p '$package'"
   done
   if [ $# -gt 0 ]; then
     echo -n ' ' "${@}"

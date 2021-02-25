@@ -1,0 +1,3 @@
+Package: firmware-iwlwifi
+Pin: release n=buster-backports
+Pin-Priority: 990

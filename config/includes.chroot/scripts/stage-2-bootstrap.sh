@@ -26,23 +26,28 @@ Options:
                             flag may be used more than once to install to
                             redundant boot devices.
 
+  -H <hostname>             Hostname to use for the bootstrapped machine.
+                            (Defaults to the lsb_release Distributor ID.)
+
   -g                        Setup legacy grub bios bootloader.
 
   -e                        Setup efi grub bootloader.
 
-  -i <ipv4_addr/NN | dhcp>  IPv4 address / prefix length or 'dhcp' if the
-                            host's network interface should be automatically
-                            configured.  Can be specified multiple times for
-                            multiple network interfaces.  Address settings will
-                            be applied to non-loopback interfaces in the order
-                            they appear in the output of 'ip -o -a link'.
+  -p <package_name>         Additional packages to be installed on the target
+                            system during the stage-2-bootstrap phase.  This
+                            flag may be used more than once to install multiple
+                            packages. Packages will be installed with their
+                            dependencies in the order in which they were
+                            specified on the command line.
+
+  -h | --help               Print this usage information and exit.
 "
 
 NON_INTERACTIVE=false
 ROOT_PASSWORD=""
 BOOT_DEVICES=( )
+EXTRA_PACKAGES=( )
 BOOT_DEV_REGEX='/^(.*\/[hs]d[a-z]+)([0-9]+)$|^(.*\/nvme[0-9]+n[0-9]+)p([0-9]+)$|^(.*)-part([0-9]+)$/'
-IPV4_ADDRESSES=( )
 LEGACY_GRUB_BOOT=false
 EFI_GRUB_BOOT=false
 EFI_SYSTEM_PARTITION_MOUNTPOINT=/boot/efi
@@ -53,11 +58,19 @@ root_auth_keys_file_present(){
   [ -f "$ROOT_AUTH_KEYS_FILE" ] && [[ $(ls -s /root/.ssh/authorized_keys | cut -d \  -f 1) != 0 ]]
 }
 
-args="$(getopt -o "b:B:c:eghi:nr:R:" -l "help" -- "$@")"
+args="$(getopt -o "b:B:c:eghHnr:p:R:" -l "help" -- "$@")"
 eval set -- "$args"
 
 while true; do
   case $1 in
+    -b )
+      BOOT_POOL="$2"
+      shift
+    ;;
+    -B )
+      BOOT_DEVICES+=( "$2" )
+      shift
+    ;;
     -c )
       HOST_CHROOT_PATH="$2"
       shift
@@ -68,32 +81,28 @@ while true; do
     -g )
       LEGACY_GRUB_BOOT=true
     ;;
+    -h | --help )
+      echo "$USAGE"
+      exit 0
+    ;;
+    -H )
+      HOSTNAME="$2"
+      shift
+    ;;
     -n )
       NON_INTERACTIVE=true
     ;;
-    -R )
-      ROOT_PASSWORD="$2"
+    -p)
+      EXTRA_PACKAGES+=( "$2" )
       shift
     ;;
     -r )
       ROOT_POOL="$2"
       shift
     ;;
-    -b )
-      BOOT_POOL="$2"
+    -R )
+      ROOT_PASSWORD="$2"
       shift
-    ;;
-    -B )
-      BOOT_DEVICES+=( "$2" )
-      shift
-    ;;
-    -H )
-      HOSTNAME="$2"
-      shift
-    ;;
-    -h )
-      echo "$USAGE"
-      exit 0
     ;;
     --)
       shift
@@ -198,11 +207,15 @@ if ! apt-get update; then
 fi
 
 # Make package installations dependent on their predecessors for easier troubleshooting
-wrapt-get $NON_INTERACTIVE console-setup locales && \
+wrapt-get $NON_INTERACTIVE console-setup locales net-tools && \
 wrapt-get $NON_INTERACTIVE openssh-server && \
 wrapt-get $NON_INTERACTIVE linux-image-amd64 linux-headers-amd64 lsb-release build-essential gdisk dkms dpkg-dev && \
 wrapt-get $NON_INTERACTIVE gawk && \
 wrapt-get $NON_INTERACTIVE zfs-initramfs
+
+for package in "${EXTRA_PACKAGES[@]}"; do
+  wrapt-get $NON_INTERACTIVE "$package"
+done
 
 if [ $apt_get_errors -gt 0 ]; then
     >&2 echo "Failed to install one or more required, stage 2 packages."
@@ -325,7 +338,6 @@ ZED_PID=$!
 # wait for zed to write to $ZFS_LIST_ROOT_CACHEFILE
 echo "Waiting for zed to populate $ZFS_LIST_ROOT_CACHEFILE"
 keep_waiting=true
-set -x
 while $keep_waiting; do
   keep_waiting=false
   for pool in "${ZFS_POOLS[@]}"; do
@@ -336,10 +348,10 @@ while $keep_waiting; do
   sleep 1
 done
 kill -TERM $ZED_PID
-set +x
+wait $ZED_PID
 
 # yank the altroot prefix off of the zfs-list cachefile.
-sed -Ei "s|$HOST_CHROOT_PATH/?|/|" "/etc/zfs/zfs-list.cache/*"
+sed -Ei "s|$HOST_CHROOT_PATH/?|/|" /etc/zfs/zfs-list.cache/*
 
 if [ -n "$ROOT_PASSWORD" ]; then
     if ! echo "root:$ROOT_PASSWORD" | chpasswd; then
