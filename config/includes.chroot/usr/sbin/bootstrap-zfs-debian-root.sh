@@ -93,7 +93,7 @@ BAD_INPUT=false
 LOOPBACK_IF_NAME=lo
 IMPORT_BOOTPOOL_UNIT_NAME=zfs-import-bootpool.service
 
-args="$(getopt -o "b:B:eghi:k:m:H:nNr:R:" -l "help" -- "$@")"
+args="$(getopt -o "b:B:eghi:k:m:H:nNp:r:R:" -l "help" -- "$@")"
 eval set -- "$args"
 
 while true; do
@@ -353,8 +353,8 @@ Exiting."
 fi
 
 # FIXME: add zpool import flags and other logic to handle these datasets already existing
-zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=${TARGET_DIRNAME}/etc/zfs/zpool.cache "$ROOT_POOL"
-zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=${TARGET_DIRNAME}/etc/zfs/zpool.cache "$BOOT_POOL"
+zpool import -o altroot=${TARGET_DIRNAME} "$ROOT_POOL"
+zpool import -o altroot=${TARGET_DIRNAME} "$BOOT_POOL"
 
 zfs create -o canmount=off -o mountpoint=none "$ROOT_POOL/ROOT"
 zfs create -o canmount=off -o mountpoint=none "$BOOT_POOL/BOOT"
@@ -409,6 +409,10 @@ if ! cdebootstrap $DEBIAN_SUITE "${TARGET_DIRNAME}" "${DEBIAN_MIRROR}"; then
     >&2 echo "Failed to setup root filesystem in $ROOT_POOL"
     exit 4
 fi
+
+# Copy in zpool.cache
+mkdir "${TARGET_DIRNAME}/etc/zfs/"
+cp /etc/zfs/zpool.cache "${TARGET_DIRNAME}/etc/zfs/"
 
 # copy custom apt and other config files into new root
 cp -a /target_config/* "${TARGET_DIRNAME}/"

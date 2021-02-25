@@ -3,6 +3,8 @@
 # Shell script to attempt repeated installs to mike's laptop more quickly
 
 set -e
+iwctl
+dhclient wlp4s0
 build-zfs-kernel-modules.sh
 modprobe zfs
 # apt-cacher-ng proxy
@@ -11,8 +13,6 @@ zpool import -afo altroot=/mnt
 zfs destroy -r thinky-winks-boot
 zfs destroy -r thinky-winks-root
 # interactive iwctl prompt to log into WiFi
-iwctl
-dhclient wlp4s0
 bootstrap-zfs-debian-root.sh -r thinky-winks-root\
   -b thinky-winks-boot\
   -H thinky-winks\
