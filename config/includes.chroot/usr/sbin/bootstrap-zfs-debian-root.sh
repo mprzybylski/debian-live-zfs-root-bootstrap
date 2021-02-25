@@ -2,8 +2,7 @@
 
 # TODO: add -I flag for IPv6 configuration
 # FIXME: add a debug flag
-# FIXME: create pools with cachefile enabled
-# FIXME: import pools at bootstrap time with cachefile=$TARGET_DIR/etc/zfs/zpool.cache
+# FIXME: validate supplemental pools
 
 USAGE="\
 Usage: bootstrap-zfs-debian-root.sh [options] -r <rootpool> -b <bootpool>
