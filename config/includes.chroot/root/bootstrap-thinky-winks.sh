@@ -11,7 +11,7 @@ zfs destroy -r thinky-winks-boot
 zfs destroy -r thinky-winks-root
 iwctl
 dhclient wlp4s0
-bootstrap-zfs-root.sh -r thinky-winks-root\
+bootstrap-zfs-debian-root.sh -r thinky-winks-root\
   -b thinky-winks-boot\
   -H thinky-winks\
   -neNR changeme\

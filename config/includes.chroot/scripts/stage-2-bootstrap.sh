@@ -53,13 +53,14 @@ root_auth_keys_file_present(){
   [ -f "$ROOT_AUTH_KEYS_FILE" ] && [[ $(ls -s /root/.ssh/authorized_keys | cut -d \  -f 1) != 0 ]]
 }
 
-args="$(getopt -o "ncegr:R:b:B:i:h" -l "help" -- "$@")"
+args="$(getopt -o "b:B:c:eghi:nr:R:" -l "help" -- "$@")"
 eval set -- "$args"
 
 while true; do
   case $1 in
     -c )
-      HOST_CHROOT_PATH="$OPTARG"
+      HOST_CHROOT_PATH="$2"
+      shift
     ;;
     -e )
       EFI_GRUB_BOOT=true
@@ -279,6 +280,7 @@ if $EFI_GRUB_BOOT; then
     --bootloader-id=debian --recheck --no-floppy
   # Setup EFI boot partition on any redundant boot devices.
   umount "$EFI_SYSTEM_PARTITION_MOUNTPOINT"
+  i=1
   while [ $i -lt ${#BOOT_DEVICES[@]} ]; do
     dd if="${BOOT_DEVICES[0]}" of="${BOOT_DEVICES[$i]}"
       eval "$(awk 'match($0, '"$BOOT_DEV_REGEX"', a){print "dev_path="a[1]a[3]a[5]";part_num="a[2]a[4]a[6] }' <<<"${BOOT_DEVICES[$i]}")"
@@ -315,7 +317,8 @@ ZFS_POOLS+=("$ROOT_POOL" "$BOOT_POOL")
 for pool in "${ZFS_POOLS[@]}"; do
   touch "/etc/zfs/zfs-list.cache/$pool"
 done
-ln -s /usr/lib/zfs-linux/zed.d/history_event-zfs-list-cacher.sh /etc/zfs/zed.d
+# Looks unnecessary now.  Throws an error that the file exists
+# ln -s /usr/lib/zfs-linux/zed.d/history_event-zfs-list-cacher.sh /etc/zfs/zed.d
 
 zed -F &
 ZED_PID=$!
