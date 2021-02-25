@@ -307,7 +307,7 @@ gen_stage2_command(){
     ((i++))
   done
   for package in "${EXTRA_PACKAGES[@]}"; do
-    echo -n "-p '$package'"
+    echo -n " -p '$package'"
   done
   if [ $# -gt 0 ]; then
     echo -n ' ' "${@}"
