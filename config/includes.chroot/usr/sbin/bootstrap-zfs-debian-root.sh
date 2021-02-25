@@ -353,8 +353,8 @@ Exiting."
 fi
 
 # FIXME: add zpool import flags and other logic to handle these datasets already existing
-zpool import -o altroot=${TARGET_DIRNAME} "$ROOT_POOL"
-zpool import -o altroot=${TARGET_DIRNAME} "$BOOT_POOL"
+zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=/etc/zfs/zpool.cache "$ROOT_POOL"
+zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=/etc/zfs/zpool.cache "$BOOT_POOL"
 
 zfs create -o canmount=off -o mountpoint=none "$ROOT_POOL/ROOT"
 zfs create -o canmount=off -o mountpoint=none "$BOOT_POOL/BOOT"
@@ -389,7 +389,7 @@ trap sigint_handler INT
 
 # import any additional user-specified ZFS pools
 for pool in "$@"; do
-    if ! zpool import -o altroot=${TARGET_DIRNAME} "$pool"; then
+    if ! zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=/etc/zfs/zpool.cache "$pool"; then
         >&2 echo "Failed to export and reimport ZFS pools at ${TARGET_DIRNAME}"
         exit 6
     fi
