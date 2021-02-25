@@ -16,7 +16,7 @@ source "$ETC/bootstrap-zfs-root/conf.sh"
 # shellcheck disable=SC1090
 source "$LIB/bootstrap-zfs-root/common_functions.sh"
 
-ZFS_RPOOL_CREATION_OPTS="-o ashift=12 -o cachefile=none -o altroot=${ZPOOL_ALTROOT}"
+ZFS_RPOOL_CREATION_OPTS="-o ashift=12 -o altroot=${ZPOOL_ALTROOT}"
 ZFS_RPOOL_TOPLEVEL_DATASET_OPTS="-O compression=lz4 -O recordsize=1M -O acltype=posixacl -O canmount=off \
     -O dnodesize=auto -O normalization=formD -O relatime=on -O xattr=sa -O mountpoint=/"
 

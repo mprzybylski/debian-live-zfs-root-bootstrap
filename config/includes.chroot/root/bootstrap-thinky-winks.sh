@@ -21,4 +21,5 @@ bootstrap-zfs-debian-root.sh -r thinky-winks-root\
   -B /dev/nvme1n1p1\
   -p iwlwifi\
   -p iwd\
+  -p man-db\
   thinky-winks-scratch

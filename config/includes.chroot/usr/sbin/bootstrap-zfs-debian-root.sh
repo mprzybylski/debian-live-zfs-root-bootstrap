@@ -2,6 +2,8 @@
 
 # TODO: add -I flag for IPv6 configuration
 # FIXME: add a debug flag
+# FIXME: create pools with cachefile enabled
+# FIXME: import pools at bootstrap time with cachefile=$TARGET_DIR/etc/zfs/zpool.cache
 
 USAGE="\
 Usage: bootstrap-zfs-debian-root.sh [options] -r <rootpool> -b <bootpool>
@@ -351,8 +353,8 @@ Exiting."
 fi
 
 # FIXME: add zpool import flags and other logic to handle these datasets already existing
-zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=none "$ROOT_POOL"
-zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=none "$BOOT_POOL"
+zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=${TARGET_DIRNAME}/etc/zfs/zpool.cache "$ROOT_POOL"
+zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=${TARGET_DIRNAME}/etc/zfs/zpool.cache "$BOOT_POOL"
 
 zfs create -o canmount=off -o mountpoint=none "$ROOT_POOL/ROOT"
 zfs create -o canmount=off -o mountpoint=none "$BOOT_POOL/BOOT"
@@ -387,7 +389,7 @@ trap sigint_handler INT
 
 # import any additional user-specified ZFS pools
 for pool in "$@"; do
-    if ! zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=none "$pool"; then
+    if ! zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=${TARGET_DIRNAME}/etc/zfs/zpool.cache "$pool"; then
         >&2 echo "Failed to export and reimport ZFS pools at ${TARGET_DIRNAME}"
         exit 6
     fi

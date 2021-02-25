@@ -207,7 +207,7 @@ if ! apt-get update; then
 fi
 
 # Make package installations dependent on their predecessors for easier troubleshooting
-wrapt-get $NON_INTERACTIVE console-setup locales net-tools && \
+wrapt-get $NON_INTERACTIVE console-setup locales net-tools man-db && \
 wrapt-get $NON_INTERACTIVE openssh-server && \
 wrapt-get $NON_INTERACTIVE linux-image-amd64 linux-headers-amd64 lsb-release build-essential gdisk dkms dpkg-dev && \
 wrapt-get $NON_INTERACTIVE gawk && \

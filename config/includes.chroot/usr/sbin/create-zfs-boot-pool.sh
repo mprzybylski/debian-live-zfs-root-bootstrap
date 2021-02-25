@@ -20,7 +20,7 @@ source "$ETC/bootstrap-zfs-root/conf.sh"
 # shellcheck disable=SC1090
 source "$LIB/bootstrap-zfs-root/common_functions.sh"
 
-ZFS_BPOOL_CREATION_OPTS="-o ashift=12 -o cachefile=none -o altroot=${ZPOOL_ALTROOT} -d \
+ZFS_BPOOL_CREATION_OPTS="-o ashift=12 -o cachefile=/etc/zfs/zpool.cache -o altroot=${ZPOOL_ALTROOT} -d \
     -o feature@async_destroy=enabled \
     -o feature@bookmarks=enabled \
     -o feature@embedded_data=enabled \
@@ -32,12 +32,7 @@ ZFS_BPOOL_CREATION_OPTS="-o ashift=12 -o cachefile=none -o altroot=${ZPOOL_ALTRO
     -o feature@large_blocks=enabled \
     -o feature@lz4_compress=enabled \
     -o feature@spacemap_histogram=enabled \
-    -o feature@userobj_accounting=enabled \
-    -o feature@zpool_checkpoint=enabled \
-    -o feature@spacemap_v2=enabled \
-    -o feature@project_quota=enabled \
-    -o feature@resilver_defer=enabled \
-    -o feature@allocation_classes=enabled"
+    -o feature@zpool_checkpoint=enabled"
 
 ZFS_BPOOL_TOPLEVEL_DATASET_OPTS="-O acltype=posixacl -O canmount=off -O compression=lz4 -O devices=off \
     -O normalization=formD -O relatime=on -O xattr=sa \
