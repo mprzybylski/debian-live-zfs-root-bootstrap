@@ -389,7 +389,7 @@ trap sigint_handler INT
 
 # import any additional user-specified ZFS pools
 for pool in "$@"; do
-    if ! zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=${TARGET_DIRNAME}/etc/zfs/zpool.cache "$pool"; then
+    if ! zpool import -o altroot=${TARGET_DIRNAME} "$pool"; then
         >&2 echo "Failed to export and reimport ZFS pools at ${TARGET_DIRNAME}"
         exit 6
     fi
