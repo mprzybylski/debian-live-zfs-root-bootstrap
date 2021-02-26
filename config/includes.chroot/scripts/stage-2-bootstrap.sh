@@ -150,6 +150,7 @@ if $BAD_INPUT; then
 fi
 
 ln -s /proc/mounts /etc/mtab
+dpkg --add-architecture i386
 
 debconf-set-selections <<LOCALE_SETTINGS
 locales locales/locales_to_be_generated multiselect     en_US ISO-8859-1, en_US.ISO-8859-15 ISO-8859-15, en_US.UTF-8 UTF-8
@@ -222,7 +223,9 @@ if [ $apt_get_errors -gt 0 ]; then
     exit 1
 fi
 
-HOSTNAME=$(lsb_release -si | awk '{print tolower($0)}')
+if [ -z "$HOSTNAME" ]; then
+  HOSTNAME=$(lsb_release -si | awk '{print tolower($0)}')
+fi
 
 # set hostname.
 echo $HOSTNAME > /etc/hostname
@@ -368,3 +371,34 @@ else
         fi
     done
 fi
+
+# zfs-import-scan.service is the only way to reliably import supplementary pools for now
+#   but it is prevented from running by the existence of zpool.cache, adn there is no way
+#   to hose zpool.cache and keep it from coming back.  So these steps replace the upstream
+#   unit file with one that ignores zpool.cache
+# FIXME: check every so often to see if this has been addressed differently upstream
+cat > /lib/systemd/system/zfs-import-scan.service <<MODIFIED_UNIT_FILE
+[Unit]
+Description=Import ZFS pools by device scanning
+Documentation=man:zpool(8)
+DefaultDependencies=no
+Requires=systemd-udev-settle.service
+Requires=zfs-load-module.service
+After=systemd-udev-settle.service
+Requires=zfs-load-module.service
+After=cryptsetup.target
+After=multipathd.target
+Before=zfs-import.target
+#ConditionFileNotEmpty=!/etc/zfs/zpool.cache
+ConditionPathIsDirectory=/sys/module/zfs
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/sbin/zpool import -aN -o cachefile=none
+
+[Install]
+WantedBy=zfs-import.target
+
+MODIFIED_UNIT_FILE
+systemctl enable zfs-import-scan

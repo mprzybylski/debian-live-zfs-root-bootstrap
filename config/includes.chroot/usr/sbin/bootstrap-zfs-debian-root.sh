@@ -351,9 +351,12 @@ Exiting."
   exit 1
 fi
 
-# FIXME: add zpool import flags and other logic to handle these datasets already existing
-zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=/etc/zfs/zpool.cache "$ROOT_POOL"
-zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=/etc/zfs/zpool.cache "$BOOT_POOL"
+# TODO: add zpool import flags and other logic to handle these datasets already existing
+# making sure everything went into zpool.cache didn't get the right behavior.
+# zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=/etc/zfs/zpool.cache "$ROOT_POOL"
+# zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=/etc/zfs/zpool.cache "$BOOT_POOL"
+zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=none "$ROOT_POOL"
+zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=none "$BOOT_POOL"
 
 zfs create -o canmount=off -o mountpoint=none "$ROOT_POOL/ROOT"
 zfs create -o canmount=off -o mountpoint=none "$BOOT_POOL/BOOT"
@@ -388,7 +391,8 @@ trap sigint_handler INT
 
 # import any additional user-specified ZFS pools
 for pool in "$@"; do
-    if ! zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=/etc/zfs/zpool.cache "$pool"; then
+#    if ! zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=/etc/zfs/zpool.cache "$pool"; then
+    if ! zpool import -o altroot=${TARGET_DIRNAME} -o cachefile=none "$pool"; then
         >&2 echo "Failed to export and reimport ZFS pools at ${TARGET_DIRNAME}"
         exit 6
     fi
@@ -410,8 +414,9 @@ if ! cdebootstrap $DEBIAN_SUITE "${TARGET_DIRNAME}" "${DEBIAN_MIRROR}"; then
 fi
 
 # Copy in zpool.cache
-mkdir "${TARGET_DIRNAME}/etc/zfs/"
-cp /etc/zfs/zpool.cache "${TARGET_DIRNAME}/etc/zfs/"
+# ...or not.  This still didn't cause the supplementary pool to be imported
+# mkdir "${TARGET_DIRNAME}/etc/zfs/"
+# cp /etc/zfs/zpool.cache "${TARGET_DIRNAME}/etc/zfs/"
 
 # copy custom apt and other config files into new root
 cp -a /target_config/* "${TARGET_DIRNAME}/"
